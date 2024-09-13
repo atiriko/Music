@@ -12,6 +12,7 @@ class Sheduler:
 
     
     def addEvent(self, event):
+        event.setBar(self.tempo)
         self.queue.append(event)
     def removeEvent(self, event):
         self.queue.remove(event)
