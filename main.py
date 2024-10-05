@@ -31,75 +31,38 @@ bebopScale = [0, 2, 4, 5, 7, 9, 10, 11, 12]
 Tempo = Tempo.Tempo
 
  
-def majorChord(note, delay,channel,scheduler,bar, index,numberOfChords):
-    time = delay*bar*numberOfChords + delay*index
+def majorChord(note, delay,channel,scheduler,bar):
+    # time = delay*bar*numberOfChords + delay*index
     # for i in range(0, 3):
+    print(bar)
+    print(note, note+4, note+7)
+    time = bar*scheduler.tempo.quarter*4
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+4, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
 
-def minorChord(note, delay,channel,scheduler,bar, index,numberOfChords):
-    time = delay*bar*numberOfChords + delay*index
+def minorChord(note, delay,channel,scheduler,bar):
+    # time = delay*bar*numberOfChords + delay*index
+    time = bar*scheduler.tempo.quarter*4
 
-    
+    print(bar)
+    print(note, note+3, note+7)
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+4, time=time, length=delay))
+    scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
 
-def diminishedChord(note, delay, channel,scheduler,bar, index,numberOfChords):
-    time = delay*bar*numberOfChords + delay*index
-
+def diminishedChord(note, delay, channel,scheduler,bar):
+    # time = delay*bar*numberOfChords + delay*index
+    time = bar*scheduler.tempo.quarter*4
+    print(bar)
+    print(note)
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+4, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
+    scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
+    scheduler.addEvent(Event.Event(channel=channel, note=note+6, time=time, length=delay))
 
 
 
-def generateMelody(key, midiout, tempo, scale,channel, length):
-    noise = PerlinNoise()
-# accepts as argument float and/or list[float]
-    notes = []
-    delays = []
-    # print(key)
-    # print(tempo.bpm)
-    # print(scale)
-    # print(length)
-    # print(tempo.lenghts)
-    possibleLengths = []
-    lengthleft = length
-    for leng in tempo.lenghts:
-        if leng <= lengthleft:
-            possibleLengths.append(len)
-    
-    lengthProbibilities = []
-    # for i, leng in enumerate(possibleLengths):
-    #     lengthProbibilities.append(abs(leng - i * 0.1))
 
-    #scale lengthProbibilities to 1
-    lengthProbibilities = [float(i)/sum(lengthProbibilities) for i in lengthProbibilities]
-    print(len(possibleLengths))
-    print(lengthProbibilities)
-    print(np.random.choice([i in range(0,len(possibleLengths))],lengthProbibilities))
-    # for i in range(0, 4):
-    #     noise_val = noise([i/1000]) *1000
-    #     print(noise_val)
-    #     delay = tempo.lenghts[random.choice(tempo.tempo2)]
-    #     print(key + scale[int(noise_val) % len(scale)])
-    #     note = key + scale[int(noise_val) % len(scale)]
-    #     note = note - 12
-    #     notes.append(note)
-    #     delays.append(delay)
-    #     # note = key + random.choice(scale)
-
-    #     midiout.send_message([0x90+channel, note, 112])
-    #     time.sleep(delay)
-    #     midiout.send_message([0x80+channel, note, 0])
-    # for i in range(0, 4):
-    #         midiout.send_message([0x90+channel, notes[i], 112])
-    #         time.sleep(delays[i])
-    #         midiout.send_message([0x80+channel, notes[i], 0])
-
-        # generateMelody(notes.E2, midiout, tempo, bluesScale)
 def chordOrder(numberOfChords):
         def nextChord(prevChord):
             if prevChord == 0:
@@ -117,7 +80,7 @@ def chordOrder(numberOfChords):
             elif prevChord == 6:
                 return np.random.choice([0,4])
         firstChord = np.random.choice([0,1,2,3,4,5,6],p=[0.76,0.04,0.04,0.04,0.04,0.04,0.04])
-        print(firstChord)
+        # print(firstChord)
         # ,[0.76,0.04,0.04,0.04,0.04,0.04,0.04]
         prevChord = firstChord
         chords = [firstChord]
@@ -128,48 +91,10 @@ def chordOrder(numberOfChords):
         print(chords)
             
         
-def pickNextCord(prevnote, notes, scale, key, tempo,channel, scheduler:Sheduler.Sheduler,bar, index,numberOfChords,order = -1 ):
-    # print(len(scale))
-    # scheduler.addEvent(Event.Event(channel=channel, note=prevnote, time=0, length=tempo.lenghts[2]*2))
-    # jump = np.random.choice(scale, p=[0.2,0.1,0.15,0.2,0.2,0.1,0.05])
-    # scale.index(jump)
-    # if order == -1:
-    #     # print(prevnote+jump)
 
-    #     order = scale.index(jump)       
-    #     if order == 0 or order == 3 or order == 4:
-    #         majorChord(prevnote+jump, scheduler.tempo.whole,0,scheduler,bar, index,numberOfChords)
-
-    #         majorChord(prevnote+jump, scheduler.tempo.whole,channel,scheduler,bar, index,numberOfChords)
-    #     elif order == 1 or order == 2 or order == 5:
-    #         minorChord(prevnote+jump, scheduler.tempo.whole,0,scheduler,bar, index,numberOfChords)
-
-    #         minorChord(prevnote+jump, scheduler.tempo.whole,channel,scheduler,bar, index,numberOfChords)
-    #     elif order == 6:
-    #         diminishedChord(prevnote+jump, scheduler.tempo.whole,0,scheduler,bar, index,numberOfChords)
-
-    #         diminishedChord(prevnote+jump, scheduler.tempo.whole,channel,scheduler,bar, index,numberOfChords)
-    # else:
-    #     # print(prevnote)
-    #     # print(order)
-
-        if order == 0 or order == 3 or order == 4:
-            majorChord(prevnote, scheduler.tempo.eighth,0,scheduler,bar, index,numberOfChords)
-
-            majorChord(prevnote, scheduler.tempo.eighth,channel,scheduler,bar, index,numberOfChords)
-        elif order == 1 or order == 2 or order == 5:
-            minorChord(prevnote, scheduler.tempo.eighth,0,scheduler,bar, index,numberOfChords)
-            
-            minorChord(prevnote, scheduler.tempo.eighth,channel,scheduler,bar, index,numberOfChords)
-        elif order == 6:
-            diminishedChord(prevnote,scheduler.tempo.eighth,0,scheduler,bar, index,numberOfChords)
-
-            diminishedChord(prevnote,scheduler.tempo.eighth,channel,scheduler,bar, index,numberOfChords)
-
-    # return (prevnote+jump,order)
 
 def selectStartingNote():
-    noteslist = [i for i in range(24, 92)]
+    noteslist = [i for i in range(40, 65)]
     # Calculate the center index
     center_index = 62
 
@@ -195,7 +120,16 @@ def metronome(sheduler):
                 note = 50
             event = Event.Event(channel=0, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
             sheduler.addEvent(event)
-def generateChortProgression(key, scale, notes, sheduler):
+def drums(sheduler):
+    for i in range(0, sheduler.tempo.bpm*3):
+        for j in range(0, 4):
+            if j == 0:
+                note = 51
+            else:
+                note = 50
+            event = Event.Event(channel=5, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
+            sheduler.addEvent(event)
+def generateChordProgression(key, scale, notes, sheduler):
     chordChannel = 1
 
     #chord progression
@@ -205,7 +139,6 @@ def generateChortProgression(key, scale, notes, sheduler):
     # print(numberofchords)
     nextchord = key
     chords = []
-    orders = []
 
     # print(chordOrder(numberofchords))
     # exit()
@@ -214,29 +147,38 @@ def generateChortProgression(key, scale, notes, sheduler):
     print(progression)
     for chord in progression:
         chords.append(key + scale[chord])
-        orders.append(chord)
-    # for i in range(0, numberofchords):
-    #     nextchord, order = pickNextCord(nextchord, notes, scale, key, sheduler.tempo,chordChannel,sheduler,0,i,numberofchords)
-    #     chords.append(nextchord)
-    #     orders.append(order)
 
-    for bar in range(0, numberofchords):
+    print(chords)
+    for bar in range(0, 64):
         # print(chors)
         # print(orders)
-        for i,chord in enumerate(chords):
-            pickNextCord(chord, notes, scale, key, sheduler.tempo,chordChannel,sheduler,bar,i,numberofchords,orders[i])
+        playChordForTheKey(chords[bar%numberofchords],chordChannel,sheduler,bar,progression[bar%numberofchords])
         
+def playChordForTheKey(note,channel,scheduler:Sheduler.Sheduler,bar,order = -1 ):
+    
+        if order == 0 or order == 3 or order == 4:
+
+            majorChord(note, scheduler.tempo.eighth,channel,scheduler,bar)
+        elif order == 1 or order == 2 or order == 5:
+            
+            minorChord(note, scheduler.tempo.eighth,channel,scheduler,bar)
+        elif order == 6:
+
+            diminishedChord(note,scheduler.tempo.eighth,channel,scheduler,bar)
 
 def startScheduler(sheduler,stop_event):
 
     notes = Notes.Notes()
-    scale = minorScale
+    scale = majorScale
     key = selectStartingNote()
-    generateChortProgression(key, scale, notes, sheduler)
+    metronome(sheduler)
+    drums(sheduler)
+    generateChordProgression(key, scale, notes, sheduler)
 
 
 
     # metronome(sheduler)
+    # sheduler.printQueue()
     sheduler.play(stop_event=stop_event)
 def setInstruments(midiout):
         midiout.send_message([0xC0, 0])
@@ -244,6 +186,7 @@ def setInstruments(midiout):
         midiout.send_message([0xC5, 60])
         midiout.send_message([0xC3, 117])
         midiout.send_message([0xC2, 119])
+        print(Instruments.instruments[-10])
 
         # midiout.send_message([0xC0, Instruments.instruments.index(np.random.choice(Instruments.instruments))])
         # midiout.send_message([0xC1, Instruments.instruments.index(np.random.choice(Instruments.instruments))])

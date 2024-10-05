@@ -8,9 +8,9 @@ class Event:
         self.length = length
         self.bar = 0
     def setBar(self, tempo:Tempo):
-        print((tempo.whole/tempo.signatureTop)*tempo.signatureBottom)
+        # print((tempo.whole/tempo.signatureTop)*tempo.signatureBottom)
         # print(self.time/tempo.bps)
-        print(tempo.bps)
+        # print(tempo.bps)
         # print(self.time / tempo.signatureBottom)
         return self.time / tempo.signatureBottom
     def __cmp__(self, other):

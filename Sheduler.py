@@ -28,6 +28,9 @@ class Sheduler:
                 f.write(str(event.length)+' ')
                 f.write(str(event.velocity)+'\n')
     
+    def printQueue(self):
+        for event in self.queue:
+            print(event)
             
     def play(self,stop_event):
         # for event in self.queue:
