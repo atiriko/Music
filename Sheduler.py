@@ -31,6 +31,10 @@ class Sheduler:
     def printQueue(self):
         for event in self.queue:
             print(event)
+    def playNote(self, note, channel, velocity):
+        self.midiout.send_message([0x90 + channel, note, velocity])
+    def stopNote(self, note, channel):
+        self.midiout.send_message([0x80 + channel, note, 0])
             
     def play(self,stop_event):
         # for event in self.queue:
