@@ -10,6 +10,11 @@ import Tempo
 import Sheduler
 import Event
 import Instruments
+import sys
+import ui
+
+from PySide6 import QtWidgets
+# import record
 import sf2_loader as sf
 
 import ProgressionStateMachine as PSM
@@ -299,21 +304,24 @@ def main():
         stop_event = threading.Event()
         sheduler = Sheduler.Sheduler(Tempo(120), midiout)
         setInstruments(midiout)
-
+        # record.startRecording()
         threading.Thread(target=startScheduler, args=(sheduler,stop_event)).start()
 
         try:
             while True:
                 entry = input('Press r to restart, s to save, f to freeplay, ctrl+c to exit.\n')
                 if entry == 'r':
+                    # record.stopRecording()
                     stop_event.set()
                     time.sleep(2)
+                    # record.startRecording()
                     stop_event.clear()
                     sheduler = Sheduler.Sheduler(Tempo(120), midiout)
 
                     threading.Thread(target=startScheduler, args=(sheduler,stop_event)).start()
                 elif entry == 's':
                     sheduler.save()
+                    # record.stopRecording()
                 elif entry == 'f':
                     stop_event.set()
                     freeplay(sheduler)
@@ -329,4 +337,12 @@ def main():
     del midiout
 
 if __name__ == '__main__':
+    app = QtWidgets.QApplication([])
+
+    widget = ui.MyWidget()
+    widget.resize(800, 600)
+    widget.setWindowTitle("Simple Piano")
+    widget.show()
+
+    sys.exit(app.exec())
     main()
