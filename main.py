@@ -1,23 +1,21 @@
 import time
 import rtmidi
 import random
-from perlin_noise import PerlinNoise
 import rtmidi.midiutil
 import Notes
-import numpy as np
 import threading
 import Tempo
 import Sheduler
 import Event
-import Instruments
 import sys
-import ui
-
-from PySide6 import QtWidgets
-# import record
+import pygameui
 import sf2_loader as sf
-
 import ProgressionStateMachine as PSM
+import numpy as np
+from perlin_noise import PerlinNoise
+from PySide6 import QtWidgets
+
+
 #scales
 majorScale = [0, 2, 4, 5, 7, 9, 11, 12]
 minorScale = [0, 2, 3, 5, 7, 8, 10, 12]
@@ -36,39 +34,30 @@ wholeToneScale = [0, 2, 4, 6, 8, 10, 12]
 jazzMinorScale = [0, 1, 3, 4, 7, 9, 10, 12]
 jazzMajorScale = [0, 2, 4, 5, 7, 9, 11, 12]
 bebopScale = [0, 2, 4, 5, 7, 9, 10, 11, 12]
+
 Tempo = Tempo.Tempo
 
  
 def majorChord(note, delay,channel,scheduler,bar):
-    # time = delay*bar*numberOfChords + delay*index
-    # for i in range(0, 3):
-    # print(bar)
-    # print(note, note+4, note+7)
     time = bar*scheduler.tempo.quarter*4
+
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+4, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
 
 def minorChord(note, delay,channel,scheduler,bar):
-    # time = delay*bar*numberOfChords + delay*index
     time = bar*scheduler.tempo.quarter*4
 
-    # print(bar)
-    # print(note, note+3, note+7)
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
 
 def diminishedChord(note, delay, channel,scheduler,bar):
-    # time = delay*bar*numberOfChords + delay*index
     time = bar*scheduler.tempo.quarter*4
-    # print(bar)
-    # print(note)
+
     scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
     scheduler.addEvent(Event.Event(channel=channel, note=note+6, time=time, length=delay))
-
-
 
 
 def chordOrder(numberOfChords):
@@ -88,15 +77,12 @@ def chordOrder(numberOfChords):
             elif prevChord == 6:
                 return np.random.choice([0,4])
         firstChord = np.random.choice([0,1,2,3,4,5,6],p=[0.76,0.04,0.04,0.04,0.04,0.04,0.04])
-        # print(firstChord)
-        # ,[0.76,0.04,0.04,0.04,0.04,0.04,0.04]
         prevChord = firstChord
         chords = [firstChord]
-        for i in range(numberOfChords-1):
+        for _ in range(numberOfChords-1):
             prevChord = nextChord(prevChord)
             chords.append(prevChord)
         return chords
-        print(chords)
             
         
 
@@ -130,11 +116,9 @@ def metronome(sheduler):
             sheduler.addEvent(event)
 def drums(sheduler):
     
-
     for i in range(0, sheduler.tempo.bpm*3):
         for j in range(0, 4):
             if j == 0:
-
                 note = 42
                 event = Event.Event(channel=5, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
                 sheduler.addEvent(event)
@@ -167,8 +151,7 @@ def drums(sheduler):
                 event = Event.Event(channel=5, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
                 sheduler.addEvent(event)
             # 35 kick 38 snare 42 hat 49 cymbal
-            # event = Event.Event(channel=5, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
-            # sheduler.addEvent(event)
+
 def generateChordProgression(key, scale, notes, sheduler):
     chordChannel = 1
 
@@ -176,12 +159,8 @@ def generateChordProgression(key, scale, notes, sheduler):
     # I – ii – iii – IV – V – vi – vii°
     numberofchords = np.random.choice([2,3,4,5], p=[0.05,0.5,0.4,0.05])
     numberofchords = 4
-    # print(numberofchords)
     nextchord = key
     chords = []
-
-    # print(chordOrder(numberofchords))
-    # exit()
 
     progression = chordOrder(numberofchords)
     print(progression)
@@ -190,8 +169,7 @@ def generateChordProgression(key, scale, notes, sheduler):
 
     print(chords)
     for bar in range(0, 64):
-        # print(chors)
-        # print(orders)
+
         playChordForTheKey(chords[bar%numberofchords],chordChannel,sheduler,bar,progression[bar%numberofchords])
     return progression, chords
 
@@ -225,7 +203,10 @@ def playChordForTheKey(note,channel,scheduler:Sheduler.Sheduler,bar,order = -1 )
         elif order == 6:
 
             diminishedChord(note,scheduler.tempo.eighth,channel,scheduler,bar)
-
+def test(scheduler:Sheduler.Sheduler):
+    for i in range(24,102):
+        # print(i)
+        scheduler.addEvent(Event.Event(channel=1, note=i, time=Tempo(120).quarter*(i-24), length=Tempo(120).quarter))
 def startScheduler(sheduler,stop_event):
 
     notes = Notes.Notes()
@@ -233,15 +214,14 @@ def startScheduler(sheduler,stop_event):
     key = selectStartingNote()
     # metronome(sheduler)
 
-    drums(sheduler)
-    progression, chords= generateChordProgression(key, scale, notes, sheduler)
+    # drums(sheduler)
+    # progression, chords= generateChordProgression(key, scale, notes, sheduler)
 
-    generateMelody(progression, chords, key, scale, notes, sheduler)
-
-
-
-    # metronome(sheduler)
-    # sheduler.printQueue()
+    # generateMelody(progression, chords, key, scale, notes, sheduler)
+    test(sheduler)
+    # Start the UI
+    threading.Thread(target=pygameui.startUI, args=(sheduler,stop_event)).start()
+    time.sleep(1)
     sheduler.play(stop_event=stop_event)
 def freeplay(sheduler):
     from pynput import keyboard
@@ -251,25 +231,26 @@ def freeplay(sheduler):
         try:
             if key.char in notes:
 
-                sheduler.playNote(notes[key.char]-30, 5, 112)
-            print('alphanumeric key {0} pressed'.format(
-                key.char))
+                sheduler.playNote(notes[key.char]-30, 1, 112)
+                print(notes[key.char]-30)
+
             if key.char == '♥':
+                listener.stop()
+
                 return False
         except AttributeError:
-            print('special key {0} pressed'.format(
-                key))
+            pass
 
     def on_release(key):
-        print('{0} released'.format(
-            key))
+
         if 'char' not in dir(key):
             return False
         if key.char in notes:
-            sheduler.stopNote(notes[key.char]-30, 5)
+            sheduler.stopNote(notes[key.char]-30, 1)
 
         if key == keyboard.Key.esc:
             # Stop listener
+            listener.stop()
             return False
 
     # Collect events until released
@@ -285,9 +266,11 @@ def freeplay(sheduler):
     listener.start()
 
 def setInstruments(midiout):
-        
+        #piano
         midiout.send_message([0xC1, 0])
+        #drums
         midiout.send_message([0xC5, 11])
+        #guitar
         midiout.send_message([0xC2, 3])
 
 
@@ -297,7 +280,6 @@ def main():
     midiout = rtmidi.MidiOut()
     available_ports = midiout.get_ports()
     midiout
-    # print(available_ports)
     if available_ports:
         midiout.open_port(0)
 
@@ -337,12 +319,5 @@ def main():
     del midiout
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
 
-    widget = ui.MyWidget()
-    widget.resize(800, 600)
-    widget.setWindowTitle("Simple Piano")
-    widget.show()
-
-    sys.exit(app.exec())
     main()
