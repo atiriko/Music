@@ -45,10 +45,12 @@ def pianoRoll(game:pygame, screen:pygame.display,events,scheduler):
                     color = 'blue'
                 elif note['channel'] == 5:
                     color = 'green'
+                #note
                 game.draw.rect(screen,color,game.rect.Rect(0+(keyWidth+2)*i,
                                                      screen.get_height()-keyLength,
                                                      keyWidth+2,
                                                      (keyLength)))
+                #noteBorder
                 game.draw.rect(screen,'black',game.rect.Rect(0+(keyWidth+2)*i,
                                                      screen.get_height()-keyLength,
                                                      keyWidth+2,
@@ -71,10 +73,10 @@ def showSlidingNotes(game:pygame,screen:pygame.display):
                 slidingNotes.remove(note)
 
             if i + min - (min%7) == note['note']:
-                if note['channel'] == 1:
-                    color = 'red'
-                elif note['channel'] == 2:
+                if note['channel'] == 2:
                     color = 'blue'
+                elif note['channel'] == 1:
+                    color = 'red'
                 elif note['channel'] == 5:
                     color = 'green'
                 game.draw.rect(screen,color,game.rect.Rect(0+(keyWidth+2)*i,
@@ -82,13 +84,22 @@ def showSlidingNotes(game:pygame,screen:pygame.display):
                                                      keyWidth+2,keyLength*note['length']))
                 game.draw.rect(screen,'black',game.rect.Rect(0+(keyWidth+2)*i,
                                                      note['y'],
-                                                     keyWidth+2,keyLength*note['length']),width=1)                
+                                                     keyWidth+2,keyLength*note['length']),width=1)
+                # game.draw.line(screen,pygame.Color(10,10,10),(0,note['y']),(screen.get_width(),note['y']))
+                
     # for i in range(0,screen.get_width()-keyWidth):
+lastTime = -1
 def showSlidingLines(game:pygame,screen:pygame.display,scheduler:Sheduler.Sheduler, events):
-
+    # print(game.time.get_ticks())
+    global lastTime
+    # print(scheduler.time)
+    if scheduler.time % scheduler.tempo.quarter == 0 and scheduler.time != lastTime:
+        slidingBeats.append({'y':screen.get_height()-keyLength + 30})
+        lastTime = scheduler.time
+    # print(scheduler.tempo.thirtysecond)
     for i,beat in enumerate(slidingBeats):
         # slidingBeats[i]['y'] -= 0.005
-        slidingBeats[i]['y'] -= 4
+        slidingBeats[i]['y'] -= 4.95
 
 
         game.draw.line(screen,pygame.Color(10,10,10),(0,beat['y']),(screen.get_width(),beat['y']))
@@ -104,8 +115,8 @@ def getEvents(events,screen,stop_event):
             if event.type == pygame.QUIT:
                 running = False
                 stop_event.set()
-            if 'beat' in event.dict:
-                slidingBeats.append({'y':screen.get_height()-keyLength})
+            # if 'beat' in event.dict:
+            #     slidingBeats.append({'y':screen.get_height()-keyLength})
             if 'noteOn' in event.dict:
 
                 if event.dict['noteOn']:
@@ -128,7 +139,7 @@ def startUI(scheduler:Sheduler.Sheduler,stop_event):
         getEvents(events,screen,stop_event)
         pianoRoll(pygame,screen,events,scheduler)
         showSlidingNotes(pygame,screen)
-        showSlidingLines(pygame,screen,scheduler,events)
+        # showSlidingLines(pygame,screen,scheduler,events)
 
 
         # flip() the display to put your work on screen
@@ -137,6 +148,6 @@ def startUI(scheduler:Sheduler.Sheduler,stop_event):
         # limits FPS to 60
         # dt is delta time in seconds since last frame, used for framerate-
         # independent physics.
-        dt = clock.tick(60) / 1000
+        # dt = clock.tick(60) / 1000
 
     pygame.quit()

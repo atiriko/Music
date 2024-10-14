@@ -46,12 +46,12 @@ class Sheduler:
             print(event)
     def playNote(self, note, channel, velocity, length=1):
         # print(note)
-        pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'beat':True}))
+        # pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'beat':True}))
 
         pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'noteOn':True,'channel':channel,'note':note,'velocity':velocity, 'length':length}))
         self.midiout.send_message([0x90 + channel, note, velocity])
     def stopNote(self, note, channel):
-        pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'beat':True}))
+        # pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'beat':True}))
 
         pygame.event.post(pygame.event.Event(pygame.event.custom_type(),{'noteOn':False,'channel':channel,'note':note}))
 
@@ -67,7 +67,7 @@ class Sheduler:
                     notesThisBeat.append(event)
             
             self.time += self.tempo.thirtysecond
-
+            # print(notesThisBeat)
             for note in notesThisBeat:
                 self.playNote(note.note,note.channel,note.velocity,note.length)
                 

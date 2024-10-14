@@ -14,7 +14,7 @@ import ProgressionStateMachine as PSM
 import numpy as np
 from perlin_noise import PerlinNoise
 from PySide6 import QtWidgets
-
+import chords
 
 #scales
 majorScale = [0, 2, 4, 5, 7, 9, 11, 12]
@@ -36,28 +36,9 @@ jazzMajorScale = [0, 2, 4, 5, 7, 9, 11, 12]
 bebopScale = [0, 2, 4, 5, 7, 9, 10, 11, 12]
 
 Tempo = Tempo.Tempo
+randomChordPatterns = chords.selectRandomChordPattern()
 
  
-def majorChord(note, delay,channel,scheduler,bar):
-    time = bar*scheduler.tempo.quarter*4
-
-    scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+4, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
-
-def minorChord(note, delay,channel,scheduler,bar):
-    time = bar*scheduler.tempo.quarter*4
-
-    scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+7, time=time, length=delay))
-
-def diminishedChord(note, delay, channel,scheduler,bar):
-    time = bar*scheduler.tempo.quarter*4
-
-    scheduler.addEvent(Event.Event(channel=channel, note=note, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+3, time=time, length=delay))
-    scheduler.addEvent(Event.Event(channel=channel, note=note+6, time=time, length=delay))
 
 
 def chordOrder(numberOfChords):
@@ -188,21 +169,32 @@ def generateMelody(progression, chords, key, scale, notes, sheduler):
             melodyNotes.append(melody[bar])
             melodyLengths.append(np.random.choice([sheduler.tempo.whole,sheduler.tempo.half,sheduler.tempo.quarter,sheduler.tempo.eighth]))
     for i in range(0, len(melodyNotes)):
-        sheduler.addEvent(Event.Event(channel=melodyChannel, note=melodyNotes[i], time=i*melodyLengths[i], length=melodyLengths[i])
-        )
+        sheduler.addEvent(Event.Event(channel=melodyChannel, note=melodyNotes[i], time=i*melodyLengths[i], length=melodyLengths[i]))
  
         
 def playChordForTheKey(note,channel,scheduler:Sheduler.Sheduler,bar,order = -1 ):
-
+        # print(randomChordPatterns[0])
         if order == 0 or order == 3 or order == 4:
-
-            majorChord(note, scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.simpleMajorChord(note, scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterMajorChord(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterMajorChordwithEighth(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.imagineMajor(note,scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.arpegioMajor(note, scheduler.tempo.eighth,channel,scheduler,bar)
+            randomChordPatterns[0][1](note, scheduler.tempo.quarter,channel,scheduler,bar)
         elif order == 1 or order == 2 or order == 5:
-            
-            minorChord(note, scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.simpleMinorChord(note, scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterMinorChord(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterMinorChordwithEighth(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.imagineMinor(note,scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.arpegioMinor(note, scheduler.tempo.eighth,channel,scheduler,bar)
+            randomChordPatterns[1][1](note, scheduler.tempo.quarter,channel,scheduler,bar)
         elif order == 6:
-
-            diminishedChord(note,scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.simpleDiminishedChord(note, scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterDiminishedChord(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.oncePerQuarterDiminishedChordwithEighth(note,scheduler.tempo.quarter,channel,scheduler,bar)
+            # chords.imagineDiminished(note,scheduler.tempo.eighth,channel,scheduler,bar)
+            # chords.arpegioDiminished(note,scheduler.tempo.eighth,channel,scheduler,bar)
+            randomChordPatterns[2][1](note, scheduler.tempo.quarter,channel,scheduler,bar)
 def test(scheduler:Sheduler.Sheduler):
     for i in range(24,102):
         # print(i)
@@ -214,11 +206,11 @@ def startScheduler(sheduler,stop_event):
     key = selectStartingNote()
     # metronome(sheduler)
 
-    # drums(sheduler)
-    # progression, chords= generateChordProgression(key, scale, notes, sheduler)
+    drums(sheduler)
+    progression, chords= generateChordProgression(key, scale, notes, sheduler)
 
-    # generateMelody(progression, chords, key, scale, notes, sheduler)
-    test(sheduler)
+    generateMelody(progression, chords, key, scale, notes, sheduler)
+    # test(sheduler)
     # Start the UI
     threading.Thread(target=pygameui.startUI, args=(sheduler,stop_event)).start()
     time.sleep(1)
