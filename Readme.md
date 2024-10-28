@@ -2,7 +2,7 @@
 
 The Music Composer project is a Python-based application designed to assist users in creating and manipulating musical compositions. The project leverages the Pygame library for its graphical interface and integrates MIDI functionalities to handle musical notes and sequences.
 
-[![Watch the video](https://img.youtube.com/vi/Ue5Ymcw54Ug/maxresdefault.jpg)](https://www.youtube.com/watch?v=Ue5Ymcw54Ug)
+[![Watch the video](https://img.youtube.com/vi/Ue5Ymcw54Ug/hqdefault.jpg)](https://www.youtube.com/watch?v=Ue5Ymcw54Ug)
 
 ### Key Features
 
