@@ -2,8 +2,66 @@
 
 The Music Composer project is a Python-based application designed to assist users in creating and manipulating musical compositions. The project leverages the Pygame library for its graphical interface and integrates MIDI functionalities to handle musical notes and sequences.
 
-[![Watch the video](https://img.youtube.com/vi/Ue5Ymcw54Ug/hqdefault.jpg)](https://www.youtube.com/watch?v=Ue5Ymcw54Ug)
+### Example output videos
+These are somewhat old videos. If you can manage to run it you will see a different UI with non working buttons.
 
+https://github.com/user-attachments/assets/071addf1-ff96-4156-bf5d-c2a6cfb092da
+
+
+
+https://github.com/user-attachments/assets/6acad28d-6ea3-4be5-bc25-20b2f8e3315b
+
+
+
+https://github.com/user-attachments/assets/49360111-acc9-432b-a166-5f162f93aae4
+
+
+
+https://github.com/user-attachments/assets/73d78371-f342-4665-8c73-06ed8effccb6
+
+
+
+https://github.com/user-attachments/assets/512bbe99-6b11-4405-93f3-dfdd762818af
+
+
+
+https://github.com/user-attachments/assets/d1bf2e23-a686-4dd6-b61e-808768be2fcb
+
+
+
+https://github.com/user-attachments/assets/b36465c1-c7ee-48d2-9664-1e972cca00b5
+
+
+
+https://github.com/user-attachments/assets/22dae53c-d6fc-4c8d-a81f-bcdd57eb6314
+
+
+
+https://github.com/user-attachments/assets/a9e39c5e-a4d2-49dc-966d-623fb2786b34
+
+
+
+https://github.com/user-attachments/assets/748a81ab-d68f-4421-a5b8-a9f56a340909
+
+
+
+https://github.com/user-attachments/assets/daed3c9e-f196-4905-8a8f-a4ccd12785be
+
+
+
+https://github.com/user-attachments/assets/1b44521e-7415-46f2-9e70-c639e0d5ae9c
+
+
+
+https://github.com/user-attachments/assets/0ebbd603-2195-474b-b92d-b041e9473ad7
+
+
+
+https://github.com/user-attachments/assets/78b1e592-e8f1-42bb-8722-88aa4c8fc580
+
+
+
+https://github.com/user-attachments/assets/e3cdcb64-e77c-43af-8f85-0e8f5eb96374
 ### Key Features
 
 - **Melody Generation**: Automatically generate melodies based on musical progressions, keys, and scales.
