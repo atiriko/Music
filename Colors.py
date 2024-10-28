@@ -1,0 +1,23 @@
+import pygame
+channel1Color = pygame.Color(255,100,100)
+channel2Color = pygame.Color(100,10,255)
+channel5Color = pygame.Color(100,255,100)
+
+playButtonColor = pygame.Color(51, 178, 73)
+playButtonColorHover = playButtonColor+pygame.Color(40,40,40)
+stopButtonColor = pygame.Color(128, 107, 157)
+stopButtonColorHover = stopButtonColor+pygame.Color(40,40,40)
+recordButtonColor = pygame.Color(235, 9, 0)
+recordButtonColorHover = recordButtonColor+pygame.Color(40,40,40)
+midiButtonColor = pygame.Color(255, 69, 40)
+midiButtonColorHover = midiButtonColor+pygame.Color(40,40,40)
+newsongButtonColor = pygame.Color(75, 129, 244)
+newsongButtonColorHover = newsongButtonColor+pygame.Color(40,40,40)
+freeplayButtonColor = pygame.Color(255, 189, 3)
+freeplayButtonColorHover = freeplayButtonColor+pygame.Color(40,40,40)
+
+pianoRollBackgroundColor = pygame.Color(200,200,200)
+buttonBackgroundColor = pygame.Color(40,40,40)
+textColor = pygame.Color(10,10,10)
+WhiteKeyColor = pygame.Color(240,240,240)
+BlackKeyColor = pygame.Color(10,10,10)

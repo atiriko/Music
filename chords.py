@@ -1,5 +1,5 @@
 import Event
-import Sheduler
+import Scheduler
 #only play one chord per bar
 def simpleMajorChord(note, delay,channel,scheduler,bar):
     time = bar*scheduler.tempo.quarter*4
