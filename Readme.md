@@ -1,7 +1,5 @@
 # Music Composer
 
-## Project Description
-
 The Music Composer project is a Python-based application designed to assist users in creating and manipulating musical compositions. The project leverages the Pygame library for its graphical interface and integrates MIDI functionalities to handle musical notes and sequences.
 
 ### Key Features
@@ -30,44 +28,9 @@ The project includes an event scheduler to manage the timing and sequencing of m
     ```sh
     python main.py
     ```
-
 2. **Generate Melodies**: Use the [`generateMelody`] function to create melodies based on your desired musical parameters.
 
 3. **Export MIDI**: Save your compositions as MIDI files for use in other music production software.
-
-### Project Structure
-
-- 
-
-main.py
-
-: Entry point of the application.
-- 
-
-Song.py
-
-: Contains the melody generation and event scheduling logic.
-- 
-
-UIGPT.py
-
-: Manages the user interface and event handling.
-- 
-
-Scheduler.py
-
-: Handles the scheduling of musical events.
-- 
-
-Record.py
-
-: Manages recording functionality.
-- 
-
-Freeplay.py
-
-: Implements freeplay mode.
-- 
 
 
 ## Features
