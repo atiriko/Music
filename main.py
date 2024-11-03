@@ -13,14 +13,16 @@ import UIGPT as UI
 import sf2_loader as sf
 import numpy as np
 from perlin_noise import PerlinNoise
-from PySide6 import QtWidgets
+import contextlib
+with contextlib.redirect_stdout(None):
+    import pygame
 import Chords
 import Freeplay
 import Song
 #scales
 majorScale = [0, 2, 4, 5, 7, 9, 11, 12]
 minorScale = [0, 2, 3, 5, 7, 8, 10, 12]
-pentatonicScale = [0, 3, 5, 7, 10, 12, 15, 17]
+pentatonicScale = [0, 2, 5, 9, 11, 12]
 dorianScale = [0, 2, 3, 5, 7, 9, 10, 12]
 phrygianScale = [0, 1, 3, 5, 7, 8, 10, 12]
 lydianScale = [0, 2, 4, 6, 7, 9, 11, 12]
@@ -57,10 +59,10 @@ def selectStartingNote():
     # Normalize the probabilities
     normalized_probabilities = probabilities / np.sum(probabilities)
     return np.random.choice(noteslist,p=normalized_probabilities)
-def startScheduler(sheduler,stop_event):
+def startScheduler(sheduler,stop_event,newSongBtnClicked,freeplayBtnClicked):
 
     notes = Notes.Notes()
-    scale = minorScale
+    scale = majorScale
     key = selectStartingNote()
     # metronome(sheduler)
 
@@ -72,7 +74,7 @@ def startScheduler(sheduler,stop_event):
     Song.generateMelody(progression, chords, key, scale, notes, sheduler)
     # test(sheduler)
     # Start the UI
-    threading.Thread(target=UI.startUI, args=(sheduler,stop_event)).start()
+    # threading.Thread(target=UI.startUI, args=(sheduler,stop_event,newSongBtnClicked,freeplayBtnClicked)).start()
     time.sleep(1)
     sheduler.play(stop_event=stop_event)
 
@@ -112,26 +114,36 @@ def main():
     midiout = setMidiout()
 
     stop_event = threading.Event()
-    sheduler = Scheduler.Scheduler(Tempo(120), midiout,stop_event)
+    newSongBtnClicked = threading.Event()
+    freeplayBtnClicked = threading.Event()
+    sheduler = Scheduler.Scheduler(Tempo(80), midiout,stop_event)
     setInstruments(midiout)
-    threading.Thread(target=startScheduler, args=(sheduler,stop_event)).start()
+    threading.Thread(target=startScheduler, args=(sheduler,stop_event,newSongBtnClicked,freeplayBtnClicked)).start()
+    threading.Thread(target=UI.startUI, args=(sheduler,stop_event,newSongBtnClicked,freeplayBtnClicked)).start()
+
     try:
         while True:
-            entry = input('Press r to restart, s to save, f to freeplay, ctrl+c to exit.\n')
-            if entry == 'r':
+            # entry = input('Press r to restart, s to save, f to freeplay, ctrl+c to exit.\n')
+            # print(entry)
+            entry = ''
+
+            
+            if newSongBtnClicked.is_set():
+                print('new song')
+                newSongBtnClicked.clear()
                 sheduler.finalize_midi_file()
                 stop_event.set()
                 time.sleep(2)
                 stop_event.clear()
-                sheduler = Scheduler.Scheduler(Tempo(120), midiout,stop_event)
-                threading.Thread(target=startScheduler, args=(sheduler,stop_event)).start()
+                sheduler = Scheduler.Scheduler(Tempo(80), midiout,stop_event)
+                threading.Thread(target=startScheduler, args=(sheduler,stop_event,newSongBtnClicked,freeplayBtnClicked)).start()
 
             elif entry == 's':
 
                 sheduler.save()
-            elif entry == 'f':
+            elif freeplayBtnClicked.is_set():
                 stop_event.set()
-                Freeplay.Freeplay(sheduler)
+                Freeplay.Freeplay(sheduler,newSongBtnClicked,freeplayBtnClicked)
                 stop_event.clear()
             time.sleep(1)
     except KeyboardInterrupt:

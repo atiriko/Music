@@ -11,7 +11,7 @@ activeNotes = []
 slidingNotes=[]
 topMargin = 100
 
-def drawButtons(screen:pygame.display,events,scheduler:Scheduler.Scheduler):
+def drawButtons(screen:pygame.display,events,scheduler:Scheduler.Scheduler,newSongBtnClicked,freeplayBtnClicked):
     # print(events)
     pygame.draw.rect(screen,Colors.buttonBackgroundColor,pygame.rect.Rect(0,0,screen.get_width(),topMargin))
     buttons = []
@@ -36,7 +36,7 @@ def drawButtons(screen:pygame.display,events,scheduler:Scheduler.Scheduler):
             if events[0].type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 if button.isHover(pos):
-                    button.click(scheduler)
+                    button.click(scheduler,newSongBtnClicked,freeplayBtnClicked)
 
 
 def pianoRoll(game:pygame, screen:pygame.display,events,scheduler):
@@ -142,7 +142,7 @@ def getEvents(events,screen,stop_event):
             if 'noteOn' in event.dict:
                 if event.dict['noteOn']:
                     activeNotes.append({'note':event.dict['note'],'channel':event.dict['channel'],'length':event.dict['length'],'endTime':event.dict['length']*1000+pygame.time.get_ticks()})
-def startUI(scheduler:Scheduler.Scheduler,stop_event):
+def startUI(scheduler:Scheduler.Scheduler,stop_event,newSongBtnClicked,freeplayBtnClicked):
     global running, min,maxNote
     pygame.init()
     screen = pygame.display.set_mode((990, 600))
@@ -168,7 +168,7 @@ def startUI(scheduler:Scheduler.Scheduler,stop_event):
         #draw the sliding notes
         showSlidingNotes(pygame,screen)
         pianoRoll(pygame,screen,events,scheduler)
-        drawButtons(screen,events,scheduler)
+        drawButtons(screen,events,scheduler,newSongBtnClicked,freeplayBtnClicked)
 
 
 

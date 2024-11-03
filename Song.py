@@ -122,11 +122,17 @@ def generateMelody(progression, chords, key, scale, notes, sheduler):
     melodyNotes = []
     melodyLengths = []
     melody = []
+    previousNote = key
     for bar in range(0, 64):
         if bar % 4 == 0:
-            melody.append(key + scale[progression[bar%len(progression)]])
+            previousNote = key + scale[progression[bar%len(progression)]]
+            melody.append(previousNote)
         else:
-            melody.append(key + scale[np.random.choice([0,1,2,3,4,5,6])])
+            diff = np.random.choice([-2,-1,0,1,2])
+            index  = progression[bar%len(progression)]
+            index = index + diff
+            previousNote = previousNote + scale[index % len(scale)]
+            melody.append(key + scale[np.random.choice(len(scale))])
     for bar in range(0, 64):
         for i in range(0, 4):
             melodyNotes.append(melody[bar])

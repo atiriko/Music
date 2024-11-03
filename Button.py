@@ -73,17 +73,21 @@ class Button:
         rect_tmp.height -= 2 * corner_radius
         rect_tmp.center = rect.center
         pygame.draw.rect(surface, color, rect_tmp)
-    def click(self,scheduler:Scheduler.Scheduler):
+    def click(self,scheduler:Scheduler.Scheduler,newSongBtnClicked,freeplayBtnClicked):
         print('clicked' + self.text)
         if self.text == 'Record Video':
             recording = Record.Record()
             recording.startRecording()
+        elif self.text == 'New Song':
+            # print(self.text)
+
+            newSongBtnClicked.set()
+            # print(newSongBtnClicked.is_set())   
         elif self.text == 'Generate Midi':
             pass
 
         elif self.text == 'Free Play':
-
-            scheduler.freeplay()
+            freeplayBtnClicked.set()
         elif self.text == 'Stop':
 
             scheduler.stop()
