@@ -56,6 +56,34 @@ class AutoSongTests(unittest.TestCase):
 
 
 class ImportTests(unittest.TestCase):
+    def test_import_labels_survive_file_renaming_and_bad_metadata_is_atomic(self):
+        from copy import deepcopy
+        source = Path(soundbanks.voice('Reese Bass')['file']).read_bytes()
+        data = bytearray(source)
+        offset = soundbanks.inspect(data)[0]['offset']
+        data[offset:offset + 20] = b'Import test'.ljust(20, b'\0')
+        metadata, _ = soundbanks.prepare(bytes(data), 'Original.sf2', 'Basses')
+        legacy = deepcopy(metadata)
+        for preset in legacy['presets']:
+            preset['bank'] = soundbanks.voice('Studio Upright')['bank']
+        upgraded = soundbanks.relocate(legacy)
+        self.assertNotEqual(upgraded['presets'][0]['bank'], legacy['presets'][0]['bank'])
+        modified = soundbanks.remap(bytes(data), upgraded)
+        self.assertEqual(soundbanks.inspect(modified)[0]['bank'], upgraded['presets'][0]['bank'])
+        before = dict(soundbanks.EXTRA)
+        invalid = deepcopy(metadata)
+        invalid['presets'][-1]['category'] = 'Invalid'
+        with self.assertRaises(ValueError):
+            soundbanks.register(invalid)
+        self.assertEqual(soundbanks.EXTRA, before)
+        try:
+            soundbanks.register(metadata)
+            label = metadata['presets'][0]['label']
+            renamed = 'Downloaded file (1) / ' + label.split(' / ', 1)[1]
+            self.assertEqual(soundbanks.voice(label), soundbanks.voice(renamed))
+        finally:
+            soundbanks.unregister(metadata['id'])
+
     def test_categories_cover_every_instrument(self):
         groups = soundbanks.groups()
         self.assertIn('Studio Upright', groups['Pianos & keys'])

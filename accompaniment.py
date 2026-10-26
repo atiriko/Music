@@ -5,8 +5,13 @@ The original engine supplies its progression and scale conversion function.
 """
 from Event import Event
 
-CHORD_STYLES = ('Varied', 'Sustained', 'Pulse', 'Syncopated', 'Arpeggiated')
+CHORD_STYLES = ('Varied', 'Sustained', 'Pulse', 'Syncopated', 'Arpeggiated', 'Strummed')
 BASS_STYLES = ('Varied', 'Root', 'Groove', 'Walking', 'Melodic')
+VOICINGS = ('Auto', 'Triads', 'Sevenths', 'Ninths', 'Sus2', 'Sus4', 'Open', 'Power')
+STRUMS = ('Auto', 'Downbeats', 'Down-up', 'Pop', 'Offbeat', 'Fingerpick', 'Chug')
+STRUM_HITS = {'Downbeats': (0, 1, 2, 3), 'Down-up': (0, .5, 1, 1.5, 2, 2.5, 3, 3.5),
+              'Pop': (0, 1, 1.5, 2.5, 3, 3.5), 'Offbeat': (0, .5, 1.5, 2.5, 3.5),
+              'Fingerpick': tuple(i / 2 for i in range(8)), 'Chug': tuple(i / 2 for i in range(8))}
 
 
 def voice_lead(pitches, previous, rng):
@@ -17,7 +22,7 @@ def voice_lead(pitches, previous, rng):
         rotated = pitches[inversion:] + [p + 12 for p in pitches[:inversion]]
         for shift in (-24, -12, 0, 12):
             chord = [p + shift for p in rotated]
-            if chord[0] >= 45 and chord[-1] <= 79:
+            if chord[0] >= 40 and chord[-1] <= 88:
                 movement = (sum(abs(p - q) for p, q in zip(chord, previous)) if previous
                             else abs(sum(chord) / len(chord) - 60))
                 candidates.append((movement, float(rng.random()), chord))
@@ -25,7 +30,7 @@ def voice_lead(pitches, previous, rng):
 
 
 def generate(key, scale, scheduler, progression, level, rng, pitch,
-             chord_style='Varied', bass_style='Varied'):
+             chord_style='Varied', bass_style='Varied', voicing='Auto', strum='Auto'):
     quarter = scheduler.tempo.quarter
     bars = len(progression)
     spans = []
@@ -40,12 +45,26 @@ def generate(key, scale, scheduler, progression, level, rng, pitch,
         elif level == 2 and bar % 4 == 3:
             changes = [(0, 2, degree), (2, 2, int(rng.choice((1, 3, 4, 5))) % len(scale))]
         for beat, duration, root in changes:
-            tones = [pitch(key, scale, root + n * 2) for n in range(4 if level == 2 else 3)]
-            voiced = voice_lead(tones, previous, rng)
+            offsets = {'Triads': (0, 2, 4), 'Sevenths': (0, 2, 4, 6),
+                       'Ninths': (0, 2, 4, 6, 8), 'Sus2': (0, 1, 4),
+                       'Sus4': (0, 3, 4), 'Open': (0, 4, 2 + len(scale)),
+                       'Power': (0, 4, len(scale))}.get(voicing, tuple(range(0, 8 if level == 2 else 6, 2)))
+            tones = sorted(pitch(key, scale, root + offset) for offset in offsets)
+            if voicing == 'Power':
+                base = pitch(key, scale, root)
+                fifth = base + 7
+                tones = sorted((base, fifth if (fifth - key) % 12 in scale else tones[1], base + 12))
+            if voicing == 'Power':
+                shift = -12 * ((tones[0] - 40) // 12)
+                voiced = [tone + shift for tone in tones]
+            else:
+                voiced = voice_lead(tones, previous, rng)
             previous = voiced
             spans.append((bar * 4 + beat, duration, root, tuple(voiced)))
     scheduler.harmony = spans
     chosen_chord = chord_style
+    if strum != 'Auto':
+        chosen_chord = 'Strummed'
     if chosen_chord == 'Varied':
         choices = ('Sustained', 'Pulse') if level == 0 else ('Pulse', 'Syncopated', 'Arpeggiated', 'Sustained')
         chosen_chord = str(rng.choice(choices))
@@ -55,7 +74,9 @@ def generate(key, scale, scheduler, progression, level, rng, pitch,
     groove = ((0, 1.5, 2.5), (0, .75, 2, 3.5), (0, 1, 2.5, 3))[int(rng.integers(3))]
     direction = int(rng.choice((-1, 1)))
     for index, (start, duration, root, tones) in enumerate(spans):
-        if chosen_chord == 'Sustained':
+        if chosen_chord == 'Strummed':
+            hits = STRUM_HITS.get(strum, STRUM_HITS['Pop'])
+        elif chosen_chord == 'Sustained':
             hits = (0,)
         elif chosen_chord == 'Pulse':
             hits = (0, 2) if level == 0 else (0, 1, 2, 3)
@@ -66,8 +87,8 @@ def generate(key, scale, scheduler, progression, level, rng, pitch,
         hits = [h for h in hits if h < duration]
         for i, hit in enumerate(hits):
             end = hits[i + 1] if i + 1 < len(hits) else duration
-            gate = .94 if chosen_chord == 'Sustained' else .72
-            notes = [tones[i % len(tones)]] if chosen_chord == 'Arpeggiated' else tones
+            gate = .94 if chosen_chord == 'Sustained' else .35 if strum == 'Chug' else .72
+            notes = [tones[i % len(tones)]] if chosen_chord == 'Arpeggiated' or strum == 'Fingerpick' else tones
             for n, note in enumerate(notes):
                 velocity = int(rng.integers(60, 76)) + (5 if hit == 0 else 0) - n * 2
                 scheduler.addEvent(Event(1, note, (start + hit) * quarter,

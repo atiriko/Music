@@ -24,17 +24,44 @@ async function transact<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore
   const db = await open();
   try {
     return await new Promise<T>((resolve, reject) => {
-      const request = run(db.transaction(STORE, mode).objectStore(STORE));
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(new Error(request.error?.name === 'QuotaExceededError' ? 'Not enough storage for this instrument library.' : 'Could not access instrument storage.'));
+      const transaction = db.transaction(STORE, mode);
+      const request = run(transaction.objectStore(STORE));
+      let result: T;
+      request.onsuccess = () => { result = request.result; };
+      transaction.oncomplete = () => resolve(result);
+      transaction.onabort = transaction.onerror = () => reject(new Error(transaction.error?.name === 'QuotaExceededError' ? 'Not enough storage for this instrument library.' : 'Could not access instrument storage.'));
     });
   } finally { db.close(); }
 }
 export const saveLibrary = (entry: StoredLibrary) => transact('readwrite', store => store.put(entry));
 export const deleteLibrary = (id: string) => transact('readwrite', store => store.delete(id));
+export async function remapLibrary(metadata: Library) {
+  const stored = await transact<StoredLibrary>('readonly', store => store.get(metadata.id));
+  if (!stored) throw new Error('The imported instrument audio is missing.');
+  const view = new DataView(stored.bytes);
+  for (const preset of metadata.presets) {
+    view.setUint16(preset.offset + 20, preset.program, true);
+    view.setUint16(preset.offset + 22, preset.bank, true);
+  }
+  await saveLibrary({ metadata, bytes: stored.bytes });
+}
 export const storedLibraries = () => transact<StoredLibrary[]>('readonly', store => store.getAll() as IDBRequest<StoredLibrary[]>);
 export async function storedMetadata() {
-  return (await storedLibraries()).map(entry => entry.metadata);
+  // Walk one library at a time so startup does not retain every SF2 buffer.
+  const db = await open();
+  try {
+    return await new Promise<Library[]>((resolve, reject) => {
+      const entries: Library[] = [];
+      const transaction = db.transaction(STORE, 'readonly');
+      const request = transaction.objectStore(STORE).openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (cursor) { entries.push((cursor.value as StoredLibrary).metadata); cursor.continue(); }
+      };
+      transaction.oncomplete = () => resolve(entries);
+      transaction.onerror = () => reject(new Error('Could not restore instrument libraries.'));
+    });
+  } finally { db.close(); }
 }
 
 /** Resolve a library identifier to SF2 bytes from the bundle or device storage. */

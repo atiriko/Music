@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import struct
+import re
 from Instruments import SOUNDFONT_PROGRAMS, DRUM_KITS
 
 ROOT = Path(__file__).resolve().parent
@@ -35,6 +36,12 @@ def groups(drums=False):
 
 
 def voice(name, drums=False):
+    # File pickers sometimes rename a downloaded file to "name (1).sf2".
+    # Resolve the content identifier even when its human-readable prefix differs.
+    if name not in EXTRA and name not in (DRUM_KITS if drums else SOUNDFONT_PROGRAMS):
+        suffix = re.search(r'\[[0-9a-f]{8}:\d+\]$', str(name))
+        if suffix:
+            name = next((label for label in EXTRA if label.endswith(suffix[0])), name)
     if name in EXTRA:
         return EXTRA[name]
     mapping = DRUM_KITS if drums else SOUNDFONT_PROGRAMS
@@ -43,6 +50,17 @@ def voice(name, drums=False):
     return {'program': mapping[name], 'bank': 128 if drums else 0,
             'gm_program': mapping[name], 'library': 'general-user',
             'file': str(ROOT / 'assets/soundfonts/GeneralUser-GS.sf2')}
+
+
+def canonical_instruments(instruments):
+    result = {}
+    for part, name in instruments.items():
+        if name is None:
+            result[part] = None
+        else:
+            descriptor = voice(name, part == 'Drums')
+            result[part] = descriptor.get('label', name)
+    return result
 
 
 def _chunks(data, start, end):
@@ -92,8 +110,10 @@ def register(metadata):
     library = metadata['id']
     if library in LIBRARIES:
         return LIBRARIES[library]
-    if not isinstance(library, str) or not library.startswith('sf2-'):
+    if not isinstance(library, str) or not re.fullmatch(r'sf2-[0-9a-f]{64}', library):
         raise ValueError('Invalid instrument library identifier.')
+    if not 1 <= len(metadata['presets']) <= 512:
+        raise ValueError('An instrument library needs 1-512 presets.')
     used = {p['bank'] & 127 for p in EXTRA.values()}
     requested = {p['bank'] & 127 for p in metadata['presets']}
     if used & requested:
@@ -104,11 +124,40 @@ def register(metadata):
             raise ValueError('Invalid instrument preset metadata.')
         if not 32 <= (preset['bank'] & 127) <= 111:
             raise ValueError('Invalid imported MIDI bank.')
+        if not 0 <= preset['gm_program'] <= 127 or name in SOUNDFONT_PROGRAMS or name in DRUM_KITS:
+            raise ValueError('Invalid or duplicate instrument label.')
+    for preset in metadata['presets']:
+        name = preset['label']
         entry = {**preset, 'library': library, 'file': metadata.get('file', '')}
         EXTRA[name] = entry
         (DRUM_KITS if preset['drums'] else SOUNDFONT_PROGRAMS)[name] = preset['gm_program']
     LIBRARIES[library] = metadata
     return metadata
+
+
+def relocate(metadata):
+    """Preserve old imports when a new bundled library occupies their MIDI bank."""
+    if metadata['id'] in LIBRARIES:
+        return LIBRARIES[metadata['id']]
+    used = {p['bank'] & 127 for p in EXTRA.values()}
+    requested = sorted({p['bank'] & 127 for p in metadata['presets']})
+    if not used.intersection(requested):
+        return metadata
+    available = [bank for bank in range(32, 112) if bank not in used]
+    if len(available) < len(requested):
+        raise ValueError('Not enough MIDI banks to restore this instrument library.')
+    result = json.loads(json.dumps(metadata))
+    mapping = dict(zip(requested, available))
+    for preset in result['presets']:
+        preset['bank'] = mapping[preset['bank'] & 127] | (preset['bank'] & 128)
+    return result
+
+
+def remap(data, metadata):
+    modified = bytearray(data)
+    for preset in metadata['presets']:
+        struct.pack_into('<HH', modified, preset['offset'] + 20, preset['program'], preset['bank'])
+    return bytes(modified)
 
 
 def unregister(library):
@@ -126,7 +175,11 @@ def prepare(data, filename, family='Auto', title=None):
     digest = hashlib.sha256(data).hexdigest()
     identifier = 'sf2-' + digest
     if identifier in LIBRARIES:
-        return LIBRARIES[identifier], data
+        metadata = LIBRARIES[identifier]
+        modified = bytearray(data)
+        for preset in metadata['presets']:
+            struct.pack_into('<HH', modified, preset['offset'] + 20, preset['program'], preset['bank'])
+        return metadata, bytes(modified)
     used = {p['bank'] & 127 for p in EXTRA.values()}
     banks = [b for b in range(32, 112) if b not in used]
     needed = (len(presets) + 127) // 128
@@ -178,7 +231,12 @@ def restore():
         for path in sorted(USER_DIR.glob('*.json')):
             entry = json.loads(path.read_text(encoding='utf-8'))
             if Path(entry['file']).is_file():
-                register(entry)
+                restored = relocate(entry)
+                if restored != entry:
+                    target = Path(entry['file'])
+                    target.write_bytes(remap(target.read_bytes(), restored))
+                    path.write_text(json.dumps(restored, indent=2), encoding='utf-8')
+                register(restored)
 
 
 restore()

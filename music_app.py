@@ -17,6 +17,10 @@ from synth import INSTRUMENTS, render
 from Instruments import DRUM_KITS
 from instrument_picker import InstrumentPicker, import_dialog
 from mix_settings import MIX_PROFILES
+from generator import MELODY_STYLES
+from accompaniment import VOICINGS, STRUMS
+from scroll_frame import ScrollablePage
+from presets import SOUND_PRESETS
 from midi_export import save_midi
 from song_ui import SongPanel
 
@@ -55,11 +59,16 @@ class MusicApp:
         self.feel = tk.StringVar(value='Natural')
         self.phrasing = tk.StringVar(value='Balanced')
         self.mix_profile = tk.StringVar(value='Balanced')
+        self.chord_voicing = tk.StringVar(value='Auto')
+        self.strum_pattern = tk.StringVar(value='Auto')
+        self.melody_style = tk.StringVar(value='Motivic')
+        self.countermelody = tk.BooleanVar(value=False)
+        self.sound_preset = tk.StringVar(value='Studio band')
         self.instrument_search = tk.StringVar()
         self.instrument_pickers = []
         self.section_context = {}
         self.instruments = {part: tk.StringVar(value=voice) for part, voice in
-                            [('Melody', 'Studio Upright'), ('Chords', 'Studio Clean Guitar'), ('Bass', 'Finger Bass'), ('Drums', 'Room kit')]}
+                            [('Melody', 'Studio Upright'), ('Chords', 'Studio Clean Guitar'), ('Bass', 'Finger Bass'), ('Countermelody', 'Flute'), ('Drums', 'Room kit')]}
         self.status = tk.StringVar(value='Choose your sound, then press Play.')
         style = ttk.Style(root)
         style.theme_use('clam')
@@ -69,8 +78,9 @@ class MusicApp:
         style.configure('TButton', padding=(14, 8))
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(fill='both', expand=True)
-        frame = ttk.Frame(self.notebook, padding=24)
-        self.notebook.add(frame, text='Generator')
+        page = ScrollablePage(self.notebook)
+        frame = page.body
+        self.notebook.add(page, text='Generator')
         ttk.Label(frame, text='Algorithmic Royalty Free Music Maker', style='Title.TLabel').pack(anchor='w')
         ttk.Label(frame, text='Compose in a key. Shape the detail. Play with built-in sounds.').pack(anchor='w', pady=(4, 20))
         controls = ttk.Frame(frame)
@@ -101,7 +111,10 @@ class MusicApp:
         library_row.pack(fill='x', pady=(8, 10))
         ttk.Button(library_row, text='Import instruments (.sf2)', command=lambda: import_dialog(self)).pack(side='left')
         ttk.Label(library_row, text='Search instruments').pack(side='left', padx=(14, 6))
-        ttk.Entry(library_row, textvariable=self.instrument_search, width=24).pack(side='left')
+        ttk.Entry(library_row, textvariable=self.instrument_search, width=18).pack(side='left')
+        preset_box = ttk.Combobox(library_row, textvariable=self.sound_preset, values=tuple(SOUND_PRESETS), state='readonly', width=16)
+        preset_box.pack(side='left', padx=(16, 6))
+        ttk.Button(library_row, text='Load sound preset', command=self.apply_sound_preset).pack(side='left')
         drum_controls = ttk.Frame(frame)
         drum_controls.pack(fill='x', pady=(0, 12))
         for col, (label, variable, choices) in enumerate([
@@ -122,6 +135,16 @@ class MusicApp:
         ]):
             playing_controls.columnconfigure(col, weight=1)
             self.choice(playing_controls, label, variable, choices, 0, col)
+        phrase_controls = ttk.Frame(frame)
+        phrase_controls.pack(fill='x', pady=(0, 12))
+        for col, (label, variable, choices) in enumerate([
+            ('Chord voicing', self.chord_voicing, VOICINGS),
+            ('Strum pattern', self.strum_pattern, STRUMS),
+            ('Melody character', self.melody_style, MELODY_STYLES),
+        ]):
+            phrase_controls.columnconfigure(col, weight=1)
+            self.choice(phrase_controls, label, variable, choices, 0, col)
+        ttk.Checkbutton(phrase_controls, text='Second melody / counterpoint', variable=self.countermelody).grid(row=1, column=3, padx=10)
         buttons = ttk.Frame(frame)
         buttons.pack(fill='x')
         ttk.Button(buttons, text='Play', command=self.start).pack(side='left', padx=(0, 8))
@@ -154,7 +177,9 @@ class MusicApp:
         self.song_panel = SongPanel(self.notebook, self)
         self.notebook.add(self.song_panel, text='Song creator')
         root.protocol('WM_DELETE_WINDOW', self.close)
-        for variable in (*self.instruments.values(), self.drum_style, self.drum_complexity, self.drum_fills, self.chord_style, self.bass_style, self.feel, self.phrasing, self.mix_profile):
+        self.countermelody.trace_add('write', self.sync_countermelody)
+        self.sync_countermelody()
+        for variable in (*self.instruments.values(), self.drum_style, self.drum_complexity, self.drum_fills, self.chord_style, self.bass_style, self.feel, self.phrasing, self.mix_profile, self.chord_voicing, self.strum_pattern, self.melody_style, self.countermelody):
             variable.trace_add('write', self.instruments_changed)
         root.after(50, self.poll)
 
@@ -163,13 +188,28 @@ class MusicApp:
         ttk.Label(parent, text=label).grid(row=row, column=col, sticky='w', pady=(0, 5))
         ttk.Combobox(parent, textvariable=variable, values=choices, state='readonly', height=18).grid(row=row + 1, column=col, sticky='ew', padx=(0, 14))
 
+    def apply_sound_preset(self):
+        preset = SOUND_PRESETS[self.sound_preset.get()]
+        for part, name in preset['instruments'].items():
+            self.instruments[part].set(name)
+        for key, value in preset['settings'].items():
+            getattr(self, key).set(value)
+        self.status.set('Loaded ' + self.sound_preset.get() + '. Every setting remains editable.')
+
+    def sync_countermelody(self, *_):
+        for picker in self.instrument_pickers:
+            if picker.part == 'Countermelody':
+                picker.set_enabled(self.countermelody.get())
+
     def read_settings(self):
         try:
             return Settings(self.key.get(), self.scale.get(), self.complexity.get(),
                             int(self.bpm.get()), int(self.bars.get()), int(self.seed.get()),
                             self.drum_style.get(), self.drum_complexity.get(), self.drum_fills.get(),
                             self.chord_style.get(), self.bass_style.get(), self.feel.get(), self.phrasing.get(),
-                            mix_profile=self.mix_profile.get(), **self.section_context)
+                            mix_profile=self.mix_profile.get(), chord_voicing=self.chord_voicing.get(),
+                            strum_pattern=self.strum_pattern.get(), melody_style=self.melody_style.get(),
+                            countermelody=self.countermelody.get(), **self.section_context)
         except ValueError as error:
             raise ValueError('Use whole numbers for tempo, bars, and seed. ' + str(error)) from error
 
@@ -362,7 +402,7 @@ class MusicApp:
             y = 10 + (high - note.pitch) / (high - low) * (height - 20)
             end = x + note.duration / total * (width - 24)
             self.canvas.create_rectangle(x, y - 2, max(x + 2, end), y + 2,
-                                         fill={'Melody': '#70baff', 'Chords': '#b4a0ff', 'Bass': '#6edbb0', 'Drums': '#ffb66e'}[note.part], outline='')
+                                         fill={'Melody': '#70baff', 'Countermelody': '#f4d87d', 'Chords': '#b4a0ff', 'Bass': '#6edbb0', 'Drums': '#ffb66e'}[note.part], outline='')
 
     def close(self):
         self.stop(announce=False)

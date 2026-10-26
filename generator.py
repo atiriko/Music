@@ -9,7 +9,7 @@ import numpy as np
 import main as engine
 import Notes
 import soundbanks
-from accompaniment import CHORD_STYLES, BASS_STYLES
+from accompaniment import CHORD_STYLES, BASS_STYLES, VOICINGS, STRUMS
 from performance import FEELS, apply as perform
 from registers import arrange
 from phrasing import PHRASINGS, apply as phrase, protect_breaks
@@ -38,6 +38,7 @@ SCALES = {
     'Bebop': engine.bebopScale,
 }
 COMPLEXITIES = ('Simple', 'Balanced', 'Intricate')
+MELODY_STYLES = ('Motivic', 'Lyrical', 'Rhythmic', 'Angular', 'Arpeggiated')
 
 @dataclass(frozen=True)
 class Settings:
@@ -58,8 +59,16 @@ class Settings:
     section_role: str = 'Loop'
     energy: int = 65
     mix_profile: str = 'Balanced'
+    chord_voicing: str = 'Auto'
+    strum_pattern: str = 'Auto'
+    melody_style: str = 'Motivic'
+    countermelody: bool = False
 
     def __post_init__(self):
+        if self.chord_voicing not in VOICINGS or self.strum_pattern not in STRUMS or self.melody_style not in MELODY_STYLES:
+            raise ValueError('Choose a listed voicing, strum pattern, and melody style.')
+        if type(self.countermelody) is not bool:
+            raise ValueError('Countermelody must be on or off.')
         if self.hook_seed is not None and (type(self.hook_seed) is not int or not 0 <= self.hook_seed <= 999999999):
             raise ValueError('Hook seed must be a whole number from 0 to 999999999.')
         if self.section_role not in ('Loop', 'Intro', 'Verse', 'Chorus', 'Bridge', 'Breakdown', 'Outro'):
@@ -105,10 +114,14 @@ def build_scheduler(settings, midiout=None, instruments=None):
     level = COMPLEXITIES.index(settings.complexity)
     rng = np.random.default_rng(settings.seed)
     engine.generateChortProgression(key, scale, Notes.Notes(), scheduler,
-                                   settings.bars, level, rng, settings.chord_style, settings.bass_style)
+                                   settings.bars, level, rng, settings.chord_style, settings.bass_style,
+                                   settings.chord_voicing, settings.strum_pattern)
     melody_rng = rng if settings.hook_seed is None else np.random.default_rng(settings.hook_seed)
     engine.generateMelody(key + 12, midiout, tempo, scale, 0,
-                          settings.bars * tempo.whole, scheduler, level, melody_rng, settings.phrasing)
+                          settings.bars * tempo.whole, scheduler, level, melody_rng, settings.phrasing, settings.melody_style)
+    if settings.countermelody:
+        from counterpoint import generate as generate_countermelody
+        generate_countermelody(scheduler, key, scale, settings.seed)
     drum_level = level if settings.drum_complexity == 'Follow complexity' else COMPLEXITIES.index(settings.drum_complexity)
     drum_rng = np.random.default_rng(np.random.SeedSequence([settings.seed, 0xD12]))
     engine.generateDrums(scheduler, settings.bars, drum_level, drum_rng,
@@ -124,8 +137,10 @@ def build_scheduler(settings, midiout=None, instruments=None):
 
 
 def generate(settings, instruments=None):
+    if instruments is not None:
+        instruments = soundbanks.canonical_instruments(instruments)
     scheduler = build_scheduler(settings, instruments=instruments)
-    parts = {0: 'Melody', 1: 'Chords', 2: 'Bass', 9: 'Drums'}
+    parts = {0: 'Melody', 1: 'Chords', 2: 'Bass', 3: 'Countermelody', 9: 'Drums'}
     events = sorted(scheduler.queue)
     notes = [Note(parts[event.channel], event.note,
                  event.time / scheduler.tempo.quarter,

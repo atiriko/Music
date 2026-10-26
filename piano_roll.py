@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import ttk
 
-COLORS = {'Melody': '#70baff', 'Chords': '#b4a0ff', 'Bass': '#6edbb0', 'Drums': '#ffb66e'}
+COLORS = {'Melody': '#70baff', 'Countermelody': '#f4d87d', 'Chords': '#b4a0ff', 'Bass': '#6edbb0', 'Drums': '#ffb66e'}
 
 
 class PianoRoll(ttk.Frame):

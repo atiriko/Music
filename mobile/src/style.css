@@ -134,3 +134,6 @@ input[type=range]{accent-color:var(--accent);border:0;padding:0;min-height:28px;
   .transport{grid-template-columns:48px 44px 1fr auto auto 180px;grid-template-areas:"play stop status meter loop volume"}
 }
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}
+
+.song-controls{border:0;padding:0;margin:0;min-width:0}
+.song-controls:disabled{opacity:.75}

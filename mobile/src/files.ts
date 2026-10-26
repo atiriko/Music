@@ -35,6 +35,6 @@ export function renderWav(composition: Composition, bundled: Library[], onProgre
       else if (typeof data.progress === 'number') onProgress(data.progress);
     };
     const midi = decodeBase64(composition.midi).buffer;
-    worker.postMessage({ midi, seconds: composition.bars * 240 / composition.bpm, libraries: composition.libraries ?? [], bundled }, [midi]);
+    worker.postMessage({ midi, seconds: composition.bars * 240 / composition.bpm, libraries: composition.libraries ?? [], mixProfile: composition.mixProfile, bundled }, [midi]);
   });
 }

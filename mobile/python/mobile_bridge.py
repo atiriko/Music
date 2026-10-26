@@ -4,9 +4,9 @@ import base64
 import json
 import tempfile
 from pathlib import Path
-from generator import Settings, generate, KEYS, SCALES, COMPLEXITIES
+from generator import Settings, generate, KEYS, SCALES, COMPLEXITIES, MELODY_STYLES
 from Instruments import SOUNDFONT_PROGRAMS, DRUM_KITS
-from accompaniment import CHORD_STYLES, BASS_STYLES
+from accompaniment import CHORD_STYLES, BASS_STYLES, VOICINGS, STRUMS
 from phrasing import PHRASINGS
 from performance import FEELS
 from drum_patterns import DRUM_STYLES, DRUM_COMPLEXITIES, DRUM_FILLS
@@ -14,9 +14,10 @@ from song import Song, Section, midi_preview, export_song_midi
 from midi_export import save_midi
 import soundbanks
 from mix_settings import MIX_PROFILES
-from auto_song import create, LENGTHS, STYLES
+from presets import SOUND_PRESETS
+from auto_song import create, add_to_song, LENGTHS, STYLES
 
-DEFAULT_INSTRUMENTS = {'Melody':'Studio Upright','Chords':'Studio Clean Guitar','Bass':'Finger Bass','Drums':'Room kit'}
+DEFAULT_INSTRUMENTS = {'Melody':'Studio Upright','Chords':'Studio Clean Guitar','Bass':'Finger Bass','Drums':'Room kit','Countermelody':'Flute'}
 
 
 def project_from_dict(data):
@@ -64,15 +65,17 @@ def handle(request_json):
                 'defaultInstruments':DEFAULT_INSTRUMENTS, 'instrumentGroups':soundbanks.groups(),
                 'kitGroups':soundbanks.groups(True),'families':list(soundbanks.FAMILIES),
                 'libraries':list(soundbanks.LIBRARIES.values()),'mixProfiles':MIX_PROFILES,
-                'songLengths':LENGTHS,'songStyles':STYLES}
+                'songLengths':LENGTHS,'songStyles':STYLES,'voicings':VOICINGS,'strums':STRUMS,
+                'melodyStyles':MELODY_STYLES,'soundPresets':SOUND_PRESETS}
     elif action=='register_library':
-        result=soundbanks.register(data)
+        result=soundbanks.register(soundbanks.relocate(data))
     elif action=='unregister_library':
         soundbanks.unregister(data['id'])
         result={'removed':data['id']}
     elif action=='automatic_song':
-        result=project_to_dict(create(Settings(**data['settings']),data['instruments'],
-                                     data.get('length','Standard'),data.get('style','From generator'),data.get('candidates',4)))
+        generated=create(Settings(**data['settings']),data['instruments'],
+                         data.get('length','Standard'),data.get('style','From generator'),data.get('candidates',4))
+        result=project_to_dict(add_to_song(project_from_dict(data['existing']),generated) if data.get('existing') else generated)
     elif action in ('section','variation'):
         settings=Settings(**data['settings'])
         instruments=dict(data['instruments'])

@@ -49,7 +49,7 @@ class SongPanel(ttk.Frame):
         ttk.Spinbox(auto, textvariable=self.auto_energy, from_=0, to=100, width=8).grid(row=1, column=2, padx=6)
         ttk.Label(auto, text='Candidates 1-8').grid(row=0, column=3, sticky='w')
         ttk.Spinbox(auto, textvariable=self.auto_candidates, from_=1, to=8, width=8).grid(row=1, column=3, padx=6)
-        ttk.Button(auto, text='Create full song', command=self.create_automatic).grid(row=1, column=4, padx=10)
+        ttk.Button(auto, text='Create and append song', command=self.create_automatic).grid(row=1, column=4, padx=10)
         self.views = ttk.Notebook(self)
         self.views.pack(fill='both', expand=True)
         arrange = ttk.Frame(self.views)
@@ -158,8 +158,8 @@ class SongPanel(ttk.Frame):
             section = self.song.sections[self.selected.get()]
             self.app.stop()
             for attr in ('key', 'scale', 'complexity', 'bpm', 'bars', 'seed',
-                         'drum_style', 'drum_complexity', 'drum_fills', 'chord_style', 'bass_style', 'feel', 'phrasing', 'mix_profile'):
-                getattr(self.app, attr).set(str(getattr(section.settings, attr)))
+                         'drum_style', 'drum_complexity', 'drum_fills', 'chord_style', 'bass_style', 'feel', 'phrasing', 'mix_profile', 'chord_voicing', 'strum_pattern', 'melody_style', 'countermelody'):
+                getattr(self.app, attr).set(getattr(section.settings, attr))
             for part, variable in self.app.instruments.items():
                 variable.set(section.instruments.get(part) or 'Mute')
             self.app.section_context = {key: getattr(section.settings, key) for key in ('hook_seed', 'section_role', 'energy')}
@@ -346,13 +346,20 @@ class SongPanel(ttk.Frame):
                 if job != self.job:
                     continue
                 if kind == 'composed':
+                    from auto_song import add_to_song
+                    try:
+                        current = Song(int(self.bpm.get()), dict(self.song.sections), list(self.song.sequence), dict(self.song.metadata))
+                        song = add_to_song(current, song)
+                    except Exception as error:
+                        self.status.set(f'Could not append song: {error}')
+                        continue
                     self.song = song
                     self.bpm.set(str(song.bpm))
                     self.selected.set(next(iter(song.sections), ''))
                     self.refresh()
                     self.show_midi(song)
                     self.views.select(self.midi_roll)
-                    self.status.set(f'Created {song.bars} bars with a shared hook and candidate selection. Every section is editable.')
+                    self.status.set(f'Created {song.bars} bars with a shared hook. Your previous sections and sequence are preserved.')
                 elif kind == 'progress':
                     self.status.set(f'Rendering section {data[0]} of {data[1]}...')
                 elif kind == 'error':

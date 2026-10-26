@@ -6,7 +6,7 @@ import { App as NativeApp } from '@capacitor/app';
 import { engine } from './engine';
 import { player } from './player';
 import { renderWav, shareFile, shareMidi } from './files';
-import { deleteLibrary, saveLibrary, storedMetadata } from './libraries';
+import { deleteLibrary, saveLibrary, storedMetadata, remapLibrary } from './libraries';
 import { PianoRoll } from './PianoRoll';
 import { FILL, PARTS, COLORS } from './types';
 import type { Catalog, Composition, Instruments, Library, Part, Project, Settings } from './types';
@@ -96,14 +96,20 @@ export default function App() {
       // Imported libraries must be registered before the catalog lists them.
       const libraries = await storedMetadata().catch(() => [] as Library[]);
       const restored: Library[] = [];
-      for (const library of libraries) { try { restored.push(await engine.registerLibrary(library)); } catch { /* Skip a damaged import; the rest still work. */ } }
+      for (const library of libraries) {
+        try {
+          const updated = await engine.registerLibrary(library);
+          if (updated.presets.some((preset, index) => preset.bank !== library.presets[index].bank)) await remapLibrary(updated);
+          restored.push(updated);
+        } catch { /* Keep stored data available for reimport if a library is damaged. */ }
+      }
       const [data, stored] = await Promise.all([refreshCatalog(), Preferences.get({ key: STORAGE })]);
       if (!active) return;
       setImported(restored);
       let state: Record<string, unknown> = {};
       if (stored.value) { try { state = JSON.parse(stored.value); } catch { /* Start with safe defaults. */ } }
       setSettings({ ...data.defaults, ...((state.settings as Settings) ?? { seed: randomSeed() }) });
-      setInstruments((state.instruments as Instruments) ?? data.defaultInstruments);
+      setInstruments({ ...data.defaultInstruments, ...((state.instruments as Instruments) ?? {}) });
       if (state.project) { try { setProject(await engine.validate(state.project)); } catch { setError('The saved draft could not be restored. Import a saved song project if you have one.'); } }
       if (Array.isArray(state.saved)) setSaved(state.saved as Saved[]);
       if (typeof state.projectName === 'string') setProjectName(state.projectName);
@@ -150,7 +156,7 @@ export default function App() {
         setSection(output); setError('');
         if (playingRef.current === 'generate') {
           const at = player.position;
-          await player.play(output.midi, at, output.libraries);
+          await player.play(output.midi, at, output.libraries, output.mixProfile);
         }
       }).catch(error => { if (request === sectionRequest.current) showError(error); });
     }, 220);
@@ -178,7 +184,7 @@ export default function App() {
       const output = target === 'generate' ? await resolveSection() : await engine.song(project);
       if (token !== operation.current) return;
       if (target === 'song') setSong(output);
-      await player.play(output.midi, 0, output.libraries);
+      await player.play(output.midi, 0, output.libraries, output.mixProfile);
       if (token !== operation.current) return;
       playingRef.current = target; setPlaying(target); setPosition(0); setNotice('');
     } catch (error) { if (token === operation.current) showError(error); }
@@ -193,7 +199,7 @@ export default function App() {
       if (token !== operation.current) return;
       lastSectionKey.current = JSON.stringify([output.settings, instruments]);
       setSettings(output.settings); setSection(output);
-      await player.play(output.midi, 0, output.libraries);
+      await player.play(output.midi, 0, output.libraries, output.mixProfile);
       if (token !== operation.current) return;
       playingRef.current = 'generate'; setPlaying('generate');
     } catch (error) { if (token === operation.current) showError(error); }
@@ -201,15 +207,14 @@ export default function App() {
   };
   const generateSong = async () => {
     if (!settings || !instruments) return;
-    if (project.sequence.length && !confirm('Replace the current arrangement with a new song?')) return;
     stop(); const token = operation.current; setError(''); setBusy('Writing song…');
     try {
       if (!Number.isInteger(auto.energy) || auto.energy < 0 || auto.energy > 100) throw new Error('Energy must be a whole number from 0 to 100.');
       if (!Number.isInteger(auto.candidates) || auto.candidates < 1 || auto.candidates > 8) throw new Error('Takes must be a whole number from 1 to 8.');
-      const output = await engine.automaticSong({ ...settings, energy: auto.energy }, instruments, auto.length, auto.style, auto.candidates);
+      const output = await engine.automaticSong({ ...settings, energy: auto.energy }, instruments, auto.length, auto.style, auto.candidates, project);
       if (token !== operation.current) return;
       setProject(output); setSelected(Object.keys(output.sections)[0] ?? '');
-      setNotice(`New song: ${output.sequence.length} parts, ${projectBars(output)} bars. Tap a section to edit it.`);
+      setNotice(`Song appended: ${output.sequence.length} entries, ${projectBars(output)} bars. Your saved sections are preserved.`);
     } catch (error) { if (token === operation.current) showError(error); }
     finally { if (token === operation.current) setBusy(''); }
   };
@@ -328,7 +333,8 @@ export default function App() {
           {settings.section_role && settings.section_role !== 'Loop' && <p className="hint">Song part: {settings.section_role}, energy {settings.energy}. <button className="link" onClick={() => setSettings({ ...settings, section_role: 'Loop', energy: 65, hook_seed: null })}>Reset to a plain loop</button></p>}
         </Group>
         <Group title="Instruments" aside={`${soundCount} sounds`}>
-          <div className="instruments">{PARTS.map(part => <InstrumentPicker key={part} part={part} value={instruments[part]} groups={part === 'Drums' ? catalog.kitGroups : catalog.instrumentGroups} onChange={value => setInstruments({ ...instruments, [part]: value })} />)}</div>
+          <label className="row"><span>Sound preset</span><select aria-label="Sound preset" defaultValue="" onChange={event => { const preset = catalog.soundPresets[event.target.value]; if (preset) { setInstruments(preset.instruments); setSettings({ ...settings, ...preset.settings }); } }}><option value="" disabled>Choose a starting sound</option>{Object.keys(catalog.soundPresets).map(name => <option key={name}>{name}</option>)}</select></label>
+          <div className="instruments">{PARTS.filter(part => part !== 'Countermelody' || settings.countermelody).map(part => <InstrumentPicker key={part} part={part} value={instruments[part]} groups={part === 'Drums' ? catalog.kitGroups : catalog.instrumentGroups} onChange={value => setInstruments({ ...instruments, [part]: value })} />)}</div>
           <div className="import-row"><select className="compact" aria-label="Imported instrument type" value={importFamily} onChange={event => setImportFamily(event.target.value)}>{['Auto', ...catalog.families].map(option => <option key={option} value={option}>{option === 'Auto' ? 'Type: from file' : option}</option>)}</select><button disabled={Boolean(busy)} onClick={() => fontInput.current?.click()}>Import .sf2</button></div>
           <input className="file-input" type="file" accept=".sf2,audio/x-soundfont" ref={fontInput} onChange={event => importFont(event.target.files?.[0])} />
         </Group>
@@ -338,6 +344,10 @@ export default function App() {
             <Select label="Bass pattern" value={settings.bass_style ?? catalog.defaults.bass_style} values={catalog.bassStyles} onChange={value => set('bass_style', value)} />
             <Select label="Playing feel" value={settings.feel ?? catalog.defaults.feel} values={catalog.feels} onChange={value => set('feel', value)} />
             <Select label="Phrasing / space" value={settings.phrasing ?? catalog.defaults.phrasing} values={catalog.phrasings} onChange={value => set('phrasing', value)} />
+            <Select label="Chord voicing" value={settings.chord_voicing ?? 'Auto'} values={catalog.voicings} onChange={value => set('chord_voicing', value)} />
+            <Select label="Strum pattern" value={settings.strum_pattern ?? 'Auto'} values={catalog.strums} onChange={value => set('strum_pattern', value)} />
+            <Select label="Melody character" value={settings.melody_style ?? 'Motivic'} values={catalog.melodyStyles} onChange={value => set('melody_style', value)} />
+            <label className="row"><span>Second melody / counterpoint</span><input aria-label="Second melody / counterpoint" type="checkbox" checked={settings.countermelody ?? false} onChange={event => set('countermelody', event.target.checked)} /></label>
             <Select label="Mix" value={settings.mix_profile ?? catalog.defaults.mix_profile ?? 'Balanced'} values={catalog.mixProfiles} onChange={value => set('mix_profile', value)} />
           </div>
         </Group>
@@ -354,16 +364,16 @@ export default function App() {
           <div className="inline"><label className="field"><span>Section name</span><input value={sectionName} maxLength={32} aria-label="Section name" onChange={event => setSectionName(event.target.value)} placeholder="Verse, Chorus…" /></label><button onClick={capture} disabled={Boolean(busy)}>Save section</button></div>
         </Group>
       </>}
-      {mode === 'song' && <>
+      {mode === 'song' && <fieldset className="song-controls" disabled={Boolean(busy)}>
         <Group title="Generate a full song">
-          <p className="hint top">Intro, verses, choruses, bridge and outro around one hook. Uses the key, tempo, instruments and mix from Generate.</p>
+          <p className="hint top">Intro, verses, choruses, bridge and outro around one hook. Uses the settings from Generate. Existing sections and arrangement entries stay in place; new sections are appended.</p>
           <div className="rows">
             <Select label="Length" value={auto.length} values={catalog.songLengths} onChange={length => setAuto({ ...auto, length })} />
             <Select label="Style" value={auto.style} values={catalog.songStyles} onChange={style => setAuto({ ...auto, style })} />
             <NumberField label="Energy · 0–100" value={auto.energy} min={0} max={100} onChange={energy => setAuto({ ...auto, energy })} />
             <NumberField label="Takes to compare" value={auto.candidates} min={1} max={8} onChange={candidates => setAuto({ ...auto, candidates })} />
           </div>
-          <div className="actions"><button className="primary" disabled={Boolean(busy)} onClick={generateSong}>Generate song</button></div>
+          <div className="actions"><button className="primary" disabled={Boolean(busy)} onClick={generateSong}>Generate and append song</button></div>
         </Group>
         <Group title="Sections" aside={`${Object.keys(project.sections).length}/32`}>{Object.keys(project.sections).length ? <>
           <div className="inline"><label className="field"><span>Saved section</span><select aria-label="Saved section" value={selectedName} onChange={event => setSelected(event.target.value)}>{Object.keys(project.sections).map(name => <option key={name}>{name}</option>)}</select></label><button onClick={() => append(selectedName)}>Add to song</button></div>
@@ -377,7 +387,7 @@ export default function App() {
         </Group>
         <div className="actions"><button className="primary" disabled={Boolean(busy) || !project.sequence.length} onClick={() => play('song')}>Play song</button><button onClick={() => setMode('projects')}>Save project</button></div>
         <PianoRoll music={song} beat={playing === 'song' && song ? position * song.bpm / 60 : 0} />
-      </>}
+      </fieldset>}
       {mode === 'projects' && <>
         <Group title="Current song" aside="Autosaved">
           <label className="field"><span>Project name</span><input value={projectName} maxLength={64} aria-label="Project name" onChange={event => setProjectName(event.target.value)} /></label>

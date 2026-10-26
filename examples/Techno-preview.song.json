@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "bpm": 130,
+  "sequence": [
+    "Preview"
+  ],
+  "metadata": {},
+  "sections": {
+    "Preview": {
+      "settings": {
+        "key": "A",
+        "scale": "Natural minor",
+        "complexity": "Balanced",
+        "bpm": 130,
+        "bars": 8,
+        "seed": 17,
+        "drum_style": "Techno",
+        "drum_complexity": "Follow complexity",
+        "drum_fills": "Every 4 bars",
+        "chord_style": "Arpeggiated",
+        "bass_style": "Varied",
+        "feel": "Natural",
+        "phrasing": "Balanced",
+        "hook_seed": null,
+        "section_role": "Loop",
+        "energy": 65,
+        "mix_profile": "Punchy",
+        "chord_voicing": "Sus2",
+        "strum_pattern": "Auto",
+        "melody_style": "Rhythmic",
+        "countermelody": false
+      },
+      "instruments": {
+        "Melody": "Techno Stab",
+        "Chords": "Dark Pad",
+        "Bass": "Acid Bass",
+        "Countermelody": "Reese Bass",
+        "Drums": "808/909 kit"
+      }
+    }
+  }
+}

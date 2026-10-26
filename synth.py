@@ -16,21 +16,21 @@ from production import finish
 SAMPLE_RATE = 22050
 SOUNDFONT = Path(__file__).parent / 'assets' / 'soundfonts' / 'GeneralUser-GS.sf2'
 INSTRUMENTS = tuple(SOUNDFONT_PROGRAMS)
-CHANNELS = {'Melody': 0, 'Chords': 1, 'Bass': 2, 'Drums': 9}
+CHANNELS = {'Melody': 0, 'Chords': 1, 'Bass': 2, 'Countermelody': 3, 'Drums': 9}
 
 
 def render(notes, settings, instruments, cancelled=None, master=True, _stem=False):
     """Return stereo 16-bit WAV bytes; None instruments mute their part."""
-    if any(voice is not None and voice not in (DRUM_KITS if part == 'Drums' else SOUNDFONT_PROGRAMS)
-           for part, voice in instruments.items()):
-        raise ValueError('Unknown instrument')
+    for part, selected_voice in instruments.items():
+        if selected_voice is not None:
+            resolve_voice(selected_voice, part == 'Drums')
     if cancelled is not None and cancelled.is_set():
         return None
     if not _stem:
         from production import mix_stems
         stems = {}
         for part, selected_voice in instruments.items():
-            if selected_voice is not None:
+            if selected_voice is not None and any(note.part == part for note in notes):
                 stem = render(notes, settings, {part: selected_voice}, cancelled, _stem=True)
                 if stem is None:
                     return None

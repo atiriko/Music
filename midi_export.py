@@ -4,7 +4,7 @@ from Instruments import SOUNDFONT_PROGRAMS, DRUM_KITS
 from mix_settings import controllers
 from soundbanks import voice as resolve_voice
 
-CHANNELS = {'Melody': 0, 'Chords': 1, 'Bass': 2, 'Drums': 9}
+CHANNELS = {'Melody': 0, 'Chords': 1, 'Bass': 2, 'Countermelody': 3, 'Drums': 9}
 
 
 def save_midi(path, notes, settings, instruments):
@@ -46,7 +46,7 @@ def save_midi_clips(path, clips, bpm, total_beats):
                 end = max(start + 1, round((offset + note.beat + note.duration) * 480))
                 events.append((start, 3, note.pitch, max(1, min(127, round(note.velocity * 127)))))
                 events.append((end, 0, note.pitch, 0))
-        if first_voice is None:
+        if first_voice is None or not any(event[1] == 3 for event in events):
             continue
         track = MidiTrack()
         midi.tracks.append(track)

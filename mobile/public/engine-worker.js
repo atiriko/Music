@@ -24,9 +24,12 @@ self.onmessage = ({ data }) => {
           output = engine.runPython('mobile_bridge.import_binary(bytes(_font_bytes.to_py()), _font_name, _font_family)');
           const metadata = JSON.parse(output.get(0));
           // The remapped copy gets private MIDI banks; this is what the synth must load.
-          const bytes = output.get(1).toJs();
-          const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-          self.postMessage({ id: data.id, result: { metadata, buffer } }, [buffer]);
+          const pythonBytes = output.get(1);
+          try {
+            const bytes = pythonBytes.toJs();
+            const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+            self.postMessage({ id: data.id, result: { metadata, buffer } }, [buffer]);
+          } finally { pythonBytes.destroy(); }
         } finally {
           output?.destroy();
           engine.runPython('del _font_bytes, _font_name, _font_family');

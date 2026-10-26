@@ -12,6 +12,7 @@ from Sheduler import Sheduler
 from generator import Settings, Note, generate
 from Instruments import SOUNDFONT_PROGRAMS, DRUM_KITS
 from midi_export import save_midi_clips
+from soundbanks import voice as resolve_voice
 
 FILL = '[Drum fill]'
 
@@ -25,10 +26,12 @@ class Section:
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9 _-]{0,31}', self.name):
             raise ValueError('Use a section name of up to 32 letters, numbers, spaces, underscores, or hyphens.')
         for part, voice in self.instruments.items():
-            if part not in ('Melody', 'Chords', 'Bass', 'Drums'):
+            if part not in ('Melody', 'Chords', 'Bass', 'Countermelody', 'Drums'):
                 raise ValueError('Unknown song part')
-            if voice is not None and voice not in (DRUM_KITS if part == 'Drums' else SOUNDFONT_PROGRAMS):
-                raise ValueError('Unknown song instrument')
+            if voice is not None:
+                descriptor = resolve_voice(voice, part == 'Drums')
+                if descriptor.get('drums', part == 'Drums') != (part == 'Drums'):
+                    raise ValueError('Choose a drum kit for drums and a pitched instrument for melodic parts.')
 
 @dataclass
 class Song:

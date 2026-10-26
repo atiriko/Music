@@ -16,6 +16,7 @@ ios/App/Pods/
 ios/App/build/
 playwright-report/
 test-results/
+test-results-web/
 *.log
 
 releases/*.apk

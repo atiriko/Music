@@ -8,7 +8,7 @@ from dataclasses import replace
 import numpy as np
 from Instruments import SOUNDFONT_PROGRAMS
 
-ROLES = {'Melody': (48, 100, 72), 'Chords': (40, 88, 60), 'Bass': (24, 64, 40)}
+ROLES = {'Melody': (48, 100, 72), 'Countermelody': (48, 96, 65), 'Chords': (40, 88, 60), 'Bass': (24, 64, 40)}
 # Low, high, central register; individual instruments override family defaults.
 SPECIAL = {
     8: (60, 108, 84), 9: (72, 108, 90), 10: (60, 108, 84),
@@ -41,7 +41,7 @@ def comfort_zone(part, instrument=None):
     if profile is None:
         return low, high, target
     low, high, center = profile
-    target = center + {'Melody': 8, 'Chords': -4, 'Bass': -24}[part]
+    target = center + {'Melody': 8, 'Countermelody': 0, 'Chords': -4, 'Bass': -24}[part]
     return low, high, min(high - 6, max(low + 6, target))
 
 
@@ -50,7 +50,8 @@ def arrange(notes, seed, instruments=None, score_beats=None):
     instruments = instruments or {}
     arranged = list(notes)
     centers = {}
-    for channel, part in enumerate(ROLES):
+    for part in ROLES:
+        channel = {'Melody': 0, 'Countermelody': 3, 'Chords': 1, 'Bass': 2}[part]
         rng = np.random.default_rng(np.random.SeedSequence([seed, 0x0C7, channel]))
         low, high, center = comfort_zone(part, instruments.get(part))
         target = center + int(rng.choice((-12, 0, 12)))
@@ -69,7 +70,9 @@ def arrange(notes, seed, instruments=None, score_beats=None):
             shifts = [s for s in range(-96, 97, 12) if min(pitches) + s >= low and max(pitches) + s <= high]
             if shifts:
                 ceiling = 128
-                if part == 'Chords':
+                if part == 'Countermelody':
+                    ceiling = centers.get(('Melody', phrase), 128) - 4
+                elif part == 'Chords':
                     ceiling = centers.get(('Melody', phrase), 128) - 8
                 elif part == 'Bass':
                     ceiling = min(centers.get(('Chords', phrase), 128) - 10,

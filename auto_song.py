@@ -2,10 +2,10 @@
 from dataclasses import replace
 from generator import Settings
 from quality import choose
-from song import Song, Section
+from song import Song, Section, FILL
 
 LENGTHS = ('Short', 'Standard', 'Extended')
-STYLES = ('From generator', 'Pop', 'Electronic', 'Rock', 'Jazz', 'Hip hop', 'Ambient')
+STYLES = ('From generator', 'Pop', 'Electronic', 'Rock', 'Jazz', 'Hip hop', 'Ambient', 'Metal', 'Drum and bass', 'Techno')
 STYLE_RULES = {
     'Pop': ('Pop', 'Syncopated', 'Groove', 'Balanced'),
     'Electronic': ('Four on the floor', 'Arpeggiated', 'Groove', 'Punchy'),
@@ -13,6 +13,9 @@ STYLE_RULES = {
     'Jazz': ('Shuffle', 'Syncopated', 'Walking', 'Warm'),
     'Hip hop': ('Hip hop', 'Syncopated', 'Groove', 'Warm'),
     'Ambient': ('Half time', 'Sustained', 'Root', 'Spacious'),
+    'Metal': ('Metal', 'Strummed', 'Groove', 'Punchy'),
+    'Drum and bass': ('Drum and bass', 'Syncopated', 'Groove', 'Punchy'),
+    'Techno': ('Techno', 'Arpeggiated', 'Groove', 'Punchy'),
 }
 
 
@@ -25,6 +28,12 @@ def create(settings, instruments, length='Standard', style='From generator', can
     if style in STYLE_RULES:
         drum, chord, bass, mix = STYLE_RULES[style]
         base = replace(base, drum_style=drum, chord_style=chord, bass_style=bass, mix_profile=mix)
+    if style == 'Metal':
+        base = replace(base, chord_voicing='Power', strum_pattern='Chug', melody_style='Angular', bpm=max(120, base.bpm))
+    elif style == 'Drum and bass':
+        base = replace(base, bpm=max(160, base.bpm), melody_style='Rhythmic')
+    elif style == 'Techno':
+        base = replace(base, bpm=max(120, base.bpm), melody_style='Rhythmic')
     chorus, selection = choose(replace(base, bars=8, section_role='Chorus', energy=max(72, base.energy)),
                                instruments, candidates, new_hook=True)
     hook = chorus.hook_seed
@@ -60,3 +69,31 @@ def create(settings, instruments, length='Standard', style='From generator', can
                 'hook_seed': hook, 'selection': {name: reports.get(name, {}) for name in used}})
     song.validate()
     return song
+
+
+def add_to_song(existing, generated):
+    """Append an automatic arrangement without overwriting any user section.
+
+    Build and validate a new snapshot first, so limit failures leave the draft
+    untouched. Name collisions receive a readable suffix rather than updates.
+    """
+    existing.validate(allow_empty=True)
+    sections = dict(existing.sections)
+    renamed = {}
+    for name, section in generated.sections.items():
+        chosen = name
+        suffix = 2
+        while chosen in sections:
+            chosen = f'{name[:26]} {suffix}'
+            suffix += 1
+        renamed[name] = chosen
+        sections[chosen] = Section(chosen, section.settings, dict(section.instruments))
+    sequence = list(existing.sequence) + [FILL if name == FILL else renamed[name] for name in generated.sequence]
+    metadata = dict(existing.metadata)
+    history = list(metadata.get('generated_batches', []))[-19:]
+    history.append({**generated.metadata, 'sections': renamed})
+    metadata['generated_batches'] = history
+    tempo = existing.bpm if existing.sections else generated.bpm
+    result = Song(tempo, sections, sequence, metadata)
+    result.validate()
+    return result

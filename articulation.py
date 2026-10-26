@@ -4,7 +4,7 @@ from soundbanks import voice
 
 def apply(scheduler, settings, instruments):
     quarter = scheduler.tempo.quarter
-    for channel, part in ((0, 'Melody'), (1, 'Chords'), (2, 'Bass')):
+    for channel, part in ((0, 'Melody'), (1, 'Chords'), (2, 'Bass'), (3, 'Countermelody')):
         selected = instruments.get(part)
         if not selected:
             continue
@@ -17,15 +17,17 @@ def apply(scheduler, settings, instruments):
             for group in groups.values():
                 if len(group) < 2:
                     continue
-                down = int(group[0].time / quarter) % 2 == 0
+                hit = group[0].time / quarter
+                down = hit % 1 < .1 if settings.strum_pattern == 'Down-up' else int(hit) % 2 == 0
+                spread = .003 if settings.strum_pattern == 'Chug' else .009
                 for index, event in enumerate(sorted(group, key=lambda e: e.note, reverse=not down)):
-                    offset = index * .009
+                    offset = index * spread
                     event.time += offset
                     event.length = max(.025, event.length - offset)
                     event.velocity = max(1, event.velocity - index * 3)
         # Wind and bowed-string leads connect nearby notes, while respecting
         # intentional phrase rests. No legato is invented across a long gap.
-        if channel == 0 and (40 <= program <= 44 or 56 <= program <= 79):
+        if channel in (0, 3) and (40 <= program <= 44 or 56 <= program <= 79):
             for event, following in zip(events, events[1:]):
                 gap = following.time - event.time - event.length
                 if 0 <= gap <= quarter * .22 and following.time - event.time <= quarter * 2:

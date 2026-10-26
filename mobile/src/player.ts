@@ -1,6 +1,7 @@
 import type { Sequencer, WorkletSynthesizer } from 'spessasynth_lib';
 import { GENERAL, loadLibrary } from './libraries';
 import type { Library } from './types';
+import { LiveBus } from './audio-bus';
 
 export function decodeBase64(value: string): Uint8Array<ArrayBuffer> {
   const text = atob(value);
@@ -12,6 +13,7 @@ class Player {
   private synth?: WorkletSynthesizer;
   private seq?: Sequencer;
   private gain?: GainNode;
+  private bus?: LiveBus;
   private loading?: Promise<void>;
   private level = .8;
   private looping = true;
@@ -41,7 +43,8 @@ class Player {
       this.synth.setLogLevel(false, true, false);
       this.gain = context.createGain();
       this.gain.gain.value = this.level;
-      this.synth.connect(this.gain);
+      this.bus = new LiveBus(context, this.gain);
+      this.synth.connect(this.bus.input);
       this.analyser = context.createAnalyser();
       this.analyser.fftSize = 512;
       this.gain.connect(this.analyser);
@@ -55,26 +58,35 @@ class Player {
   }
   /** Load studio or imported libraries only when a composition uses them. */
   private async ensure(libraries: string[]) {
+    for (const id of this.loaded) {
+      if (id !== GENERAL && !libraries.includes(id)) {
+        await this.synth!.soundBankManager.deleteSoundBank(id);
+        this.loaded.delete(id);
+      }
+    }
     for (const id of libraries) {
       if (this.loaded.has(id)) continue;
       await this.synth!.soundBankManager.addSoundBank(await loadLibrary(id, this.bundled), id);
       this.loaded.add(id);
     }
   }
-  play(midi: string, start = 0, libraries: string[] = []) {
+  play(midi: string, start = 0, libraries: string[] = [], profile = 'Balanced') {
     const ticket = ++this.serial;
     this.preparingPlayback = true;
     const task = this.queue.then(async () => {
       if (ticket !== this.serial) return;
-      await this.playNow(midi, start, ticket, libraries);
+      await this.playNow(midi, start, ticket, libraries, profile);
     });
     const finished = task.finally(() => { if (ticket === this.serial) this.preparingPlayback = false; });
     this.queue = finished.catch(() => {});
     return finished;
   }
-  private async playNow(midi: string, start: number, ticket: number, libraries: string[]) {
+  private async playNow(midi: string, start: number, ticket: number, libraries: string[], profile: string) {
     await this.ready();
+    if (ticket !== this.serial) return;
+    this.halt();
     await this.ensure(libraries);
+    this.bus?.configure(profile);
     if (ticket !== this.serial) return;
     this.halt();
     const seq = this.seq!;

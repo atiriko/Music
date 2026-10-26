@@ -108,3 +108,12 @@ Native share-sheet behavior, audio interruptions/routes, memory usage on older p
 The only portability change to desktop song rendering is a lazy import of its native audio renderer. Desktop generation, project and MIDI APIs remain shared. Numeric settings also receive explicit whole-number validation for mobile input. The desktop UI and launch command remain available.
 
 Credits and license copies are in `THIRD_PARTY_NOTICES.md`, `licenses`, and the installed app's `licenses`/`soundfonts` assets. GeneralUser GS is by S. Christian Collins. Pyodide is unmodified MPL-2.0; SpessaSynth core/library are Apache-2.0. No existing user code was relicensed.
+
+
+## Song development and instrument libraries
+
+Automatic generation appends related sections and preserves existing handmade sections and sequence entries. Names are made unique before the resulting project is validated. Musical controls include chord voicings, strum patterns, melody characters, and optional counterpoint. Metal, drum-and-bass, and techno sound presets use bundled samples and procedural synth patches.
+
+SoundFont (.sf2) imports are limited to 64 MB per file. Imported presets are inspected and remapped into private banks by the same Python code as desktop. Normalized bytes live in IndexedDB, are restored before project validation, and are used by both the audio worklet and WAV worker. Pickers group sounds by instrument family. Project JSON contains references rather than embedding sample files, so moving a project between devices requires importing the same instrument libraries.
+
+The original desktop engine functions remain available. Additional shared modules are `auto_song.py`, `quality.py`, `arrangement.py`, `articulation.py`, `counterpoint.py`, `soundbanks.py`, and `presets.py`. The build includes every shared module and the featured catalog; SF2 files and credits are bundled separately. Live playback loads the libraries a composition uses and unloads unused custom banks between compositions.

@@ -1,1 +1,1 @@
-ed5d7adbf02b480dd4175a472f48c0120c230e58b4c9c290713aaccec99df79a  Music-Studio-android-debug.apk
+c2bddb64f1ab7cfbe87afa7f7b8bc5cda6853427a5ecb69a49e1d9251192c3c8  Music-Studio-android-debug.apk

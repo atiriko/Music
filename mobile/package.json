@@ -13,7 +13,8 @@
     "android": "cap open android",
     "ios": "cap open ios",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
-    "build:android": "python scripts/build_android.py"
+    "build:android": "python scripts/build_android.py",
+    "build:web": "npm run build -- --base=/"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

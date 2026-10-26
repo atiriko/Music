@@ -22,3 +22,12 @@ The Python composition code remains in the desktop project and is bundled unchan
 - GeneralUser GS 2.0.3 by S. Christian Collins: license/source/hash in assets/soundfonts in the parent project and in the app soundfonts folder.
 
 SpessaSynth core/library use Apache-2.0; their complete license files are included with the app. No Pyodide or third-party runtime source is modified.
+
+
+## Additional instrument recordings
+
+Studio Upright: FreePats Upright Piano KW, recorded by Gonzalo and Roberto, processed by Roberto. Version 2022-02-21, CC0 1.0. Source: https://freepats.zenvoid.org/Piano/acoustic-grand-piano.html
+
+Studio Clean Guitar: FreePats FSBS Electric Guitar Clean, bridge small variant, version 2026-08-07, CC0 1.0. Studio Metal Guitar is a driven derivative of these recordings. Source: https://freepats.zenvoid.org/ElectricGuitar/clean-electric-guitar.html
+
+Original credit and license files are included under `soundfonts/featured`. Preset bank/program headers are remapped for simultaneous playback. Studio Synths uses generated waveforms and contains no third-party recordings; it can be rebuilt with the parent project's `build_studio_sounds.py`.

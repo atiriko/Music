@@ -1,0 +1,4 @@
+# Pure Python packages included in the browser engine and license bundle.
+# Desktop audio drivers and native synthesis packages are unnecessary here.
+mido==1.3.3
+packaging==23.2

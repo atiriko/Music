@@ -2,10 +2,13 @@
 import numpy as np
 from Event import Event
 
-DRUM_STYLES = ('Rock', 'Pop', 'Four on the floor', 'Funk', 'Hip hop', 'Shuffle', 'Half time', 'Breakbeat')
+DRUM_STYLES = ('Rock', 'Pop', 'Four on the floor', 'Funk', 'Hip hop', 'Shuffle', 'Half time', 'Breakbeat', 'Metal', 'Drum and bass', 'Techno')
 DRUM_COMPLEXITIES = ('Follow complexity', 'Simple', 'Balanced', 'Intricate')
 DRUM_FILLS = {'None': 0, 'Every 2 bars': 2, 'Every 4 bars': 4, 'Every 8 bars': 8}
 KICKS = {
+    'Metal': ((0, .5, 1, 1.5, 2, 2.5, 3, 3.5), (0, .25, 1, 1.5, 2, 2.25, 3, 3.5), (0, .5, .75, 2, 2.5, 2.75)),
+    'Drum and bass': ((0, 1.75, 2.5), (0, .75, 2, 2.75), (0, 1.5, 2.5, 3.75)),
+    'Techno': ((0, 1, 2, 3),),
     'Rock': ((0, 2), (0, 1.5, 2), (0, 2, 2.5), (0, .5, 2)),
     'Pop': ((0, 1.5, 2.5), (0, 2), (0, 2.5, 3.5), (0, .5, 2.5)),
     'Four on the floor': ((0, 1, 2, 3),),
@@ -34,26 +37,28 @@ def generate(scheduler, bars=8, complexity=1, rng=None, style='Rock', fill_every
 
     for bar in range(bars):
         kicks = choose(KICKS[style]) if bar % 2 and rng.random() < .65 else base_kicks
-        if complexity == 0 and style != 'Four on the floor':
+        if complexity == 0 and style not in ('Four on the floor', 'Techno', 'Metal'):
             kicks = (0, choose((1.5, 2, 2.5, 3)))
         for beat in kicks:
             hit(bar, beat, 36, rng.integers(90, 112))
         snares = (2,) if style == 'Half time' else (1, 3)
         for beat in snares:
             hit(bar, beat, 38, rng.integers(85, 106))
-            if style in ('Pop', 'Four on the floor') and rng.random() < .6:
+            if style in ('Pop', 'Four on the floor', 'Techno') and rng.random() < .6:
                 hit(bar, beat, 39, rng.integers(48, 72))
         subdivisions = (4, 8, 16)[complexity]
         for step in range(subdivisions):
             beat = step * 4 / subdivisions
             if beat % 1 and rng.random() < .12:
                 continue
-            pitch = 46 if complexity > 0 and abs(beat - open_hat) < 1e-8 else 42
+            pitch = 46 if complexity > 0 and (abs(beat - open_hat) < 1e-8 or style == 'Techno' and beat % 1 == .5) else 42
+            if style == 'Metal' and complexity > 0:
+                pitch = 51 if bar % 4 < 2 else 49
             hit(bar, beat, pitch, rng.integers(48, 72), .4 if pitch == 46 else .15)
         # Optional offbeat hits vary even a sparse groove without moving its anchors.
         if complexity == 0:
             hit(bar, choose((.5, 1.5, 2.5, 3.5)), 42, rng.integers(40, 60))
-        elif style in ('Funk', 'Hip hop', 'Breakbeat'):
+        elif style in ('Funk', 'Hip hop', 'Breakbeat', 'Drum and bass'):
             hit(bar, choose((.75, 1.75, 2.75, 3.75)), 38, rng.integers(32, 50))
         elif rng.random() < .6:
             hit(bar, choose((.5, 1.5, 2.5, 3.5)), 54, rng.integers(40, 62))

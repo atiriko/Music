@@ -61,7 +61,7 @@ def diminishedChord(note, delay, channel,scheduler,bar, index,numberOfChords):
 
 
 def generateMelody(key, midiout, tempo, scale, channel, length,
-                   scheduler=None, complexity=1, rng=None, phrasing='Balanced'):
+                   scheduler=None, complexity=1, rng=None, phrasing='Balanced', melody_style='Motivic'):
     """Develop a two-bar motif over the scheduled harmony.
 
     Strong beats use chord tones, weak beats mostly move by scale step,
@@ -70,6 +70,10 @@ def generateMelody(key, midiout, tempo, scale, channel, length,
     rng = rng if rng is not None else np.random.default_rng()
     scale = sorted({offset % 12 for offset in scale})
     rhythms = ((1, 2), (.5, 1, 1), (.25, .5, .5, 1))[complexity]
+    if melody_style == 'Lyrical':
+        rhythms = (1, 1, 2)
+    elif melody_style == 'Rhythmic':
+        rhythms = (.25, .5, .5, 1)
     motifs = []
     for motif_index in range(2):
         pattern = []
@@ -86,8 +90,13 @@ def generateMelody(key, midiout, tempo, scale, channel, length,
             pattern = [(beat, min(duration, cutoff - beat)) for beat, duration in pattern
                        if beat < cutoff and (beat in (0, 2) or rng.random() >= rest_probability)]
         motifs.append(pattern)
-    contours = ((1, 1, -1, -1, 1, 0, -1, 0), (0, 1, -1, 1, 1, -1, -1, 0),
-                (-1, -1, 1, 1, 0, 1, -1, 0))
+    contours = ((0, 0, 1, 0, -1, 0, 2, -1), (0, 1, 0, 0, -1, 1, 0, -1),
+                (0, -1, 0, 2, -1, 0, 0, 1), (0, 2, -1, 0, 0, -1, 1, 0),
+                (0, 0, -1, 0, 1, 0, -2, 1), (0, -2, 1, 0, 1, 0, 0, -1))
+    if melody_style == 'Angular':
+        contours = ((0, 3, -1, -2, 0, 4, -1, -1), (0, -3, 1, 0, 4, -1, 0, -2))
+    elif melody_style == 'Rhythmic':
+        contours = ((0, 0, 0, 1, 0, 0, -1, 0), (0, 0, 1, 0, 0, -1, 0, 0))
     contour = contours[int(rng.integers(len(contours)))]
     position = len(scale)
     last_move = 0
@@ -95,6 +104,8 @@ def generateMelody(key, midiout, tempo, scale, channel, length,
     bars = int(np.ceil(length / tempo.whole))
     for bar in range(bars):
         start = bar * tempo.whole
+        if bar % 2 == 0:
+            phrase_anchor = position
         chord_pitches = {event.note % 12 for event in scheduler.queue
                          if event.channel == 1 and abs(event.time - start) < 1e-7} if scheduler else set()
         if not chord_pitches:
@@ -113,11 +124,16 @@ def generateMelody(key, midiout, tempo, scale, channel, length,
             if elapsed >= length - 1e-9:
                 break
             duration = min(beats * tempo.quarter, length - elapsed)
-            step = contour[index % len(contour)]
-            if abs(last_move) > 1:
+            step = contour[(index + (bar % 2) * 3) % len(contour)]
+            if abs(last_move) > 1 and melody_style != 'Angular':
                 step = -1 if last_move > 0 else 1
-            target = max(len(scale) - 3, min(2 * len(scale) - 1, position + step))
+            gesture = position + step if melody_style == 'Rhythmic' else phrase_anchor + step
+            if abs(last_move) > 1 and melody_style not in ('Angular', 'Arpeggiated'):
+                gesture = position + (-1 if last_move > 0 else 1)
+            target = max(len(scale) - 3, min(2 * len(scale) - 1, gesture))
             strong = beat in (0, 2)
+            if melody_style == 'Arpeggiated':
+                strong = True
             if strong:
                 candidates = [degree for degree in range(len(scale) - 3, 2 * len(scale))
                               if scaleNote(key, scale, degree) % 12 in chord_pitches]
@@ -230,14 +246,14 @@ def metronome(sheduler):
             event = Event.Event(channel=0, note=note , time=i*sheduler.tempo.quarter*4+(j*sheduler.tempo.quarter), length=sheduler.tempo.sixteenth)
             sheduler.addEvent(event)
 def generateChortProgression(key, scale, notes, sheduler, bars=8, complexity=1, rng=None,
-                            chord_style='Varied', bass_style='Varied'):
+                            chord_style='Varied', bass_style='Varied', chord_voicing='Auto', strum_pattern='Auto'):
     """Extend the original progression with voiced accompaniment and bass motifs."""
     from accompaniment import generate
     rng = rng if rng is not None else np.random.default_rng()
     scale = sorted({offset % 12 for offset in scale})
     progression = chordOrder(bars, rng)
     generate(key, scale, sheduler, progression, complexity, rng, scaleNote,
-             chord_style, bass_style)
+             chord_style, bass_style, chord_voicing, strum_pattern)
 
 
 def generateDrums(sheduler, bars=8, complexity=1, rng=None, style='Rock', fill_every=4):

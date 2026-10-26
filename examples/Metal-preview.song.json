@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "bpm": 150,
+  "sequence": [
+    "Preview"
+  ],
+  "metadata": {},
+  "sections": {
+    "Preview": {
+      "settings": {
+        "key": "E",
+        "scale": "Natural minor",
+        "complexity": "Balanced",
+        "bpm": 150,
+        "bars": 8,
+        "seed": 17,
+        "drum_style": "Metal",
+        "drum_complexity": "Follow complexity",
+        "drum_fills": "Every 4 bars",
+        "chord_style": "Strummed",
+        "bass_style": "Varied",
+        "feel": "Natural",
+        "phrasing": "Balanced",
+        "hook_seed": null,
+        "section_role": "Loop",
+        "energy": 65,
+        "mix_profile": "Punchy",
+        "chord_voicing": "Power",
+        "strum_pattern": "Chug",
+        "melody_style": "Angular",
+        "countermelody": false
+      },
+      "instruments": {
+        "Melody": "Metal Lead",
+        "Chords": "Studio Metal Guitar",
+        "Bass": "Pick Bass",
+        "Countermelody": "Overdrive Guitar",
+        "Drums": "Power kit"
+      }
+    }
+  }
+}

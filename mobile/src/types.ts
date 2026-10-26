@@ -1,8 +1,9 @@
-export type Part = 'Melody' | 'Chords' | 'Bass' | 'Drums';
+export type Part = 'Melody' | 'Chords' | 'Bass' | 'Drums' | 'Countermelody';
 export interface Settings {
   key: string; scale: string; complexity: string; bpm: number; bars: number; seed: number;
   chord_style: string; bass_style: string; feel: string; phrasing: string;
   drum_style: string; drum_complexity: string; drum_fills: string;
+  chord_voicing?: string; strum_pattern?: string; melody_style?: string; countermelody?: boolean;
   hook_seed?: number | null; section_role?: string; energy?: number; mix_profile?: string;
 }
 export type Instruments = Record<Part, string | null>;
@@ -21,8 +22,10 @@ export interface Catalog {
   drumStyles: string[]; drumComplexities: string[]; drumFills: string[];
   defaults: Settings; defaultInstruments: Instruments;
   instrumentGroups: Record<string, string[]>; kitGroups: Record<string, string[]>; families: string[];
+  voicings: string[]; strums: string[]; melodyStyles: string[];
+  soundPresets: Record<string, { instruments: Instruments; settings: Partial<Settings> }>;
   libraries: Library[]; mixProfiles: string[]; songLengths: string[]; songStyles: string[];
 }
-export const PARTS: Part[] = ['Melody', 'Chords', 'Bass', 'Drums'];
-export const COLORS: Record<Part, string> = { Melody: '#f0c36a', Chords: '#8ab4a0', Bass: '#d77f58', Drums: '#a7a39b' };
+export const PARTS: Part[] = ['Melody', 'Chords', 'Bass', 'Countermelody', 'Drums'];
+export const COLORS: Record<Part, string> = { Countermelody: '#b69ddd', Melody: '#f0c36a', Chords: '#8ab4a0', Bass: '#d77f58', Drums: '#a7a39b' };
 export const FILL = '[Drum fill]';

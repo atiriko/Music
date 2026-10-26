@@ -9,7 +9,8 @@ class InstrumentPicker(ttk.Frame):
         super().__init__(parent)
         self.part, self.variable, self.search = part, variable, search
         self.family = tk.StringVar(value='All types')
-        ttk.Label(self, text=part).pack(anchor='w', pady=(0, 4))
+        self.title = ttk.Label(self, text=part)
+        self.title.pack(anchor='w', pady=(0, 4))
         self.filter = ttk.Combobox(self, textvariable=self.family, state='readonly', height=16)
         self.filter.pack(fill='x', pady=(0, 4))
         self.box = ttk.Combobox(self, textvariable=variable, state='readonly', height=16)
@@ -25,6 +26,11 @@ class InstrumentPicker(ttk.Frame):
         names = [name for group, values in groups.items() for name in values
                  if self.family.get() in ('All types', group) and query in name.casefold()]
         self.box.configure(values=(*names, 'Mute'))
+
+    def set_enabled(self, enabled):
+        self.title.configure(text=self.part if enabled else self.part + ' (off)')
+        self.filter.configure(state='readonly' if enabled else 'disabled')
+        self.box.configure(state='readonly' if enabled else 'disabled')
 
 
 def import_dialog(app):

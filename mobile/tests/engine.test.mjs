@@ -18,8 +18,8 @@ const catalog = run({ action: 'catalog' });
 const roundNotes = notes => notes.map(note => ({ ...note, beat: +note.beat.toFixed(6), duration: +note.duration.toFixed(6), velocity: +note.velocity.toFixed(6) }));
 
 test('the bundled engine has all 128 instruments and nine drum kits', () => {
-  assert.equal(catalog.instruments.length, 130); assert.equal(catalog.kits.length, 9);
-  assert.equal(catalog.drumStyles.length, 8);
+  assert.equal(catalog.instruments.length, 137); assert.equal(catalog.kits.length, 9);
+  assert.equal(catalog.drumStyles.length, 11);
 });
 
 test('mobile generation and MIDI match the existing desktop engine', () => {
@@ -72,6 +72,43 @@ test('new mobile variations change the real drum rhythm', () => {
 
 test('mobile rejects invalid projects rather than playing corrupt data', () => {
   assert.throws(() => run({ action: 'song', data: { version: 1, bpm: 110, sections: {}, sequence: ['Missing'] } }), /missing section/);
+});
+
+test('automatic songs append while preserving custom sections and MIDI counterpoint', () => {
+  const custom = { settings: { ...catalog.defaults, bars: 1, seed: 444, countermelody: true }, instruments: catalog.defaultInstruments };
+  const existing = { version: 1, bpm: 123, sections: { Chorus: custom }, sequence: ['Chorus'] };
+  const request = { action: 'automatic_song', data: { settings: { ...catalog.defaults, seed: 11, countermelody: true }, instruments: catalog.defaultInstruments, existing, length: 'Short', style: 'Metal', candidates: 1 } };
+  const project = run(request);
+  assert.deepEqual(project.sections.Chorus, custom);
+  assert.equal(project.sequence[0], 'Chorus');
+  assert.ok(project.sections['Chorus 2']);
+  assert.deepEqual(project, desktop(request));
+  const song = run({ action: 'song', data: project });
+  assert.ok(song.notes.some(note => note.part === 'Countermelody'));
+  assert.ok(Buffer.from(song.midi, 'base64').includes(Buffer.from('Countermelody')));
+});
+
+test('bundled studio and electronic presets play their own private banks', async () => {
+  for (const instrument of ['Studio Upright', 'Studio Metal Guitar', 'Reese Bass', 'Acid Bass']) {
+    const library = catalog.libraries.find(item => item.presets.some(preset => preset.label === instrument));
+    assert.ok(library, instrument);
+    const preset = library.presets.find(item => item.label === instrument);
+    const output = run({ action: 'section', data: { settings: { ...catalog.defaults, bars: 1 }, instruments: { Melody: instrument } } });
+    const processor = new SpessaSynthProcessor(22050);
+    const bank = readFileSync('../' + library.relative_file);
+    processor.soundBankManager.addSoundBank(SoundBankLoader.fromArrayBuffer(Uint8Array.from(bank).buffer), library.id);
+    await processor.processorInitialized;
+    const sequencer = new SpessaSynthSequencer(processor);
+    sequencer.loadNewSongList([BasicMIDI.fromArrayBuffer(Uint8Array.from(Buffer.from(output.midi, 'base64')).buffer)]);
+    sequencer.loopCount = 0; sequencer.play();
+    const left = new Float32Array(128), right = new Float32Array(128);
+    let peak = 0;
+    for (let i = 0; i < 200; i++) {
+      sequencer.processTick(); processor.process(left, right);
+      for (const value of left) peak = Math.max(peak, Math.abs(value));
+    }
+    assert.ok(peak > .001, `${instrument} private bank ${preset.bank} was silent`);
+  }
 });
 
 test('the mobile SoundFont engine renders distinct, audible instrument samples', async () => {

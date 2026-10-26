@@ -1,0 +1,2 @@
+Studio Metal Guitar is a driven derivative of the CC0 FreePats FSBS clean guitar. See the original credits and license.
+Studio Synths contains mathematically generated waveforms and no third-party recordings. Rebuild with build_studio_sounds.py.

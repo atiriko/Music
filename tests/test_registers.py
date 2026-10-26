@@ -27,9 +27,9 @@ class RegisterTests(unittest.TestCase):
         baseline = generate(settings)
         for instrument in SOUNDFONT_PROGRAMS:
             instruments = dict.fromkeys(('Melody', 'Chords', 'Bass'), instrument)
-            notes = generate(settings, instruments)
+            notes = arrange(baseline, settings.seed, instruments)
             with self.subTest(instrument=instrument):
-                self.assertEqual(notes, generate(settings, instruments))
+                self.assertEqual(notes, arrange(baseline, settings.seed, instruments))
                 self.assertEqual(len(baseline), len(notes))
                 for before, after in zip(baseline, notes):
                     # Instrument-specific articulation (strums, legato, pedal)

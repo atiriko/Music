@@ -36,5 +36,93 @@
       }
     ],
     "relative_file": "assets/soundfonts/featured/clean-guitar.sf2"
+  },
+  {
+    "id": "sf2-727c02997f4efb5b33487c2631e30c728cad0e94a73766bae81b2a4cef82950e",
+    "name": "Studio Metal Guitar",
+    "filename": "metal-guitar.sf2",
+    "sha256": "727c02997f4efb5b33487c2631e30c728cad0e94a73766bae81b2a4cef82950e",
+    "presets": [
+      {
+        "label": "Studio Metal Guitar",
+        "name": "EGuitar Cl. Br. Sm.",
+        "category": "Guitars",
+        "program": 0,
+        "bank": 34,
+        "gm_program": 30,
+        "drums": false,
+        "offset": 10853902
+      }
+    ],
+    "relative_file": "assets/soundfonts/featured/metal-guitar.sf2"
+  },
+  {
+    "id": "sf2-a8421b7a1ca08864192cd42cb507cc98eafac9ec4f4a72ce93aca04165ced8be",
+    "name": "Studio Synths",
+    "filename": "studio-synths.sf2",
+    "sha256": "a8421b7a1ca08864192cd42cb507cc98eafac9ec4f4a72ce93aca04165ced8be",
+    "presets": [
+      {
+        "label": "Reese Bass",
+        "name": "Reese Bass",
+        "category": "Basses",
+        "program": 0,
+        "bank": 35,
+        "gm_program": 38,
+        "drums": false,
+        "offset": 33104
+      },
+      {
+        "label": "Acid Bass",
+        "name": "Acid Bass",
+        "category": "Basses",
+        "program": 1,
+        "bank": 35,
+        "gm_program": 38,
+        "drums": false,
+        "offset": 33142
+      },
+      {
+        "label": "Techno Stab",
+        "name": "Techno Stab",
+        "category": "Synth leads",
+        "program": 2,
+        "bank": 35,
+        "gm_program": 81,
+        "drums": false,
+        "offset": 33180
+      },
+      {
+        "label": "DnB Sub",
+        "name": "DnB Sub",
+        "category": "Basses",
+        "program": 3,
+        "bank": 35,
+        "gm_program": 38,
+        "drums": false,
+        "offset": 33218
+      },
+      {
+        "label": "Metal Lead",
+        "name": "Metal Lead",
+        "category": "Synth leads",
+        "program": 4,
+        "bank": 35,
+        "gm_program": 80,
+        "drums": false,
+        "offset": 33256
+      },
+      {
+        "label": "Dark Pad",
+        "name": "Dark Pad",
+        "category": "Synth pads",
+        "program": 5,
+        "bank": 35,
+        "gm_program": 89,
+        "drums": false,
+        "offset": 33294
+      }
+    ],
+    "relative_file": "assets/soundfonts/featured/studio-synths.sf2"
   }
 ]

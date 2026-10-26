@@ -4,6 +4,7 @@ Bass stays centered and dry; the accompaniment sits behind the lead.
 These controller values also work when the exported MIDI is opened elsewhere.
 """
 PART_CONTROLLERS = {
+    'Countermelody': {7: 82, 10: 87, 91: 36, 93: 8},
     'Melody': {7: 108, 10: 70, 91: 28, 93: 8},
     'Chords': {7: 86, 10: 49, 91: 40, 93: 16},
     'Bass': {7: 112, 10: 64, 91: 5, 93: 0},

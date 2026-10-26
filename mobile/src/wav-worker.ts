@@ -1,5 +1,6 @@
 import { BasicMIDI, SoundBankLoader, SpessaSynthProcessor, SpessaSynthSequencer } from 'spessasynth_core';
 import { GENERAL, loadLibrary } from './libraries';
+import { OfflineBus } from './audio-bus';
 
 self.onmessage = async ({ data }) => {
   try {
@@ -15,6 +16,7 @@ self.onmessage = async ({ data }) => {
     seq.loopCount = 0;
     seq.loadNewSongList([BasicMIDI.fromArrayBuffer(data.midi)]);
     seq.play();
+    const bus = new OfflineBus(rate, data.mixProfile ?? 'Balanced');
     const frames = Math.ceil((data.seconds + 1) * rate);
     const buffer = new ArrayBuffer(44 + frames * 4);
     const view = new DataView(buffer);
@@ -29,6 +31,7 @@ self.onmessage = async ({ data }) => {
       seq.processTick();
       const count = Math.min(128, frames - frame);
       synth.process(left, right, 0, count);
+      bus.process(left, right, count);
       for (let i = 0; i < count; i++) {
         const fade = Math.min(1, (frames - frame - i - 1) / (rate * .05));
         peak = Math.max(peak, Math.abs(left[i]), Math.abs(right[i]));

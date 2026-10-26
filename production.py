@@ -11,11 +11,11 @@ def mix_stems(stems, notes, settings, sample_rate):
     """Balance stems, carve space, and duck bass/chords around lead attacks."""
     size = len(next(iter(stems.values())))
     mix = np.zeros((size, 2), dtype=np.float32)
-    targets = {'Melody': .075, 'Chords': .045, 'Bass': .065, 'Drums': .06}
+    targets = {'Melody': .075, 'Countermelody': .045, 'Chords': .045, 'Bass': .065, 'Drums': .06}
     for part, audio in stems.items():
         fft_size = 1 << size.bit_length()
         frequencies = np.fft.rfftfreq(fft_size, 1 / sample_rate)
-        cutoff = {'Melody': 95, 'Chords': 150, 'Bass': 28, 'Drums': 30}[part]
+        cutoff = {'Melody': 95, 'Countermelody': 130, 'Chords': 150, 'Bass': 28, 'Drums': 30}[part]
         response = frequencies ** 2 / (frequencies ** 2 + cutoff ** 2)
         if part == 'Chords':
             response *= 1 - .23 * np.exp(-((frequencies - 1600) / 1100) ** 2)

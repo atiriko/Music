@@ -30,7 +30,7 @@ while needed:
     if hashlib.sha256(target.read_bytes()).hexdigest()!=package['sha256']:
         raise RuntimeError('Runtime package checksum mismatch: '+name)
     needed.extend(package['depends'])
-files=['soundbanks.py','auto_song.py','arrangement.py','articulation.py','quality.py','phrasing.py','registers.py','accompaniment.py','performance.py','mix_settings.py','main.py','generator.py','drum_patterns.py','Event.py','Notes.py','Tempo.py','Sheduler.py',
+files=['counterpoint.py','presets.py','soundbanks.py','auto_song.py','arrangement.py','articulation.py','quality.py','phrasing.py','registers.py','accompaniment.py','performance.py','mix_settings.py','main.py','generator.py','drum_patterns.py','Event.py','Notes.py','Tempo.py','Sheduler.py',
        'Instruments.py','ProgressionStateMachine.py','song.py','midi_export.py']
 with zipfile.ZipFile(PUBLIC/'engine.zip','w',zipfile.ZIP_DEFLATED) as archive:
     for name in files:archive.write(ROOT/name,name)

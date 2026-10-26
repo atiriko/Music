@@ -6,7 +6,7 @@ FEELS = ('Tight', 'Natural', 'Loose')
 
 def apply(scheduler, bars, seed, feel):
     streams = {channel: np.random.default_rng(np.random.SeedSequence([seed, 0xFEE, channel]))
-               for channel in (0, 1, 2, 9)}
+               for channel in (0, 1, 2, 3, 9)}
     amount = {'Tight': 0, 'Natural': .006, 'Loose': .012}[feel]
     end = bars * scheduler.tempo.whole
     groups = {}

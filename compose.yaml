@@ -1,0 +1,8 @@
+services:
+  music:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${MUSIC_PORT:-43729}:43729"
+    restart: unless-stopped

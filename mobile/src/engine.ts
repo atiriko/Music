@@ -28,8 +28,8 @@ class MusicEngine {
   variation(settings: Settings, instruments: Instruments, seed: number) { return this.request<Composition>('variation', { settings, instruments, seed }); }
   song(project: Project) { return this.request<Composition>('song', project); }
   validate(project: unknown) { return this.request<Project>('validate_project', project); }
-  automaticSong(settings: Settings, instruments: Instruments, length: string, style: string, candidates: number) {
-    return this.request<Project>('automatic_song', { settings, instruments, length, style, candidates });
+  automaticSong(settings: Settings, instruments: Instruments, length: string, style: string, candidates: number, existing?: Project) {
+    return this.request<Project>('automatic_song', { settings, instruments, length, style, candidates, existing });
   }
   registerLibrary(metadata: Library) { return this.request<Library>('register_library', metadata); }
   unregisterLibrary(id: string) { return this.request<{ removed: string }>('unregister_library', { id }); }

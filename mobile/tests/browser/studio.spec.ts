@@ -15,10 +15,10 @@ test('all local assets initialize offline and the phone layout fits', async ({ p
     return route.continue();
   });
   await openStudio(page);
-  await expect(page.getByLabel('Melody', { exact: true }).locator('option')).toHaveCount(131);
+  await expect(page.getByLabel('Melody', { exact: true }).locator('option')).toHaveCount(138);
   await expect(page.getByLabel('Drums', { exact: true }).locator('option')).toHaveCount(10);
-  await expect(page.getByLabel('Drum style', { exact: true }).locator('option')).toHaveCount(8);
-  await expect(page.getByLabel('Chord pattern').locator('option')).toHaveCount(5);
+  await expect(page.getByLabel('Drum style', { exact: true }).locator('option')).toHaveCount(11);
+  await expect(page.getByLabel('Chord pattern').locator('option')).toHaveCount(6);
   await expect(page.getByLabel('Bass pattern').locator('option')).toHaveCount(5);
   await page.getByLabel('Chord pattern').selectOption('Arpeggiated');
   await page.getByLabel('Bass pattern').selectOption('Walking');
@@ -120,7 +120,7 @@ test('desktop projects import through the phone interface and validation recover
   await expect(page.getByRole('alert')).toHaveCount(0);
   await page.getByLabel('Variation seed').fill('123');
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
-  await page.locator('input[type=file]').setInputFiles('../examples/Example.song.json');
+  await page.locator('input[type=file][accept*=".json"]').setInputFiles('../examples/Example.song.json');
   await expect(page.getByText('54 bars', { exact: true })).toBeVisible();
   await expect(page.getByRole('img', { name: /Piano roll with/ })).not.toHaveAttribute('aria-label', 'Piano roll with 0 MIDI notes');
   await page.getByRole('button', { name: 'Projects', exact: true }).click();
@@ -129,4 +129,76 @@ test('desktop projects import through the phone interface and validation recover
   await page.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Import a song project' })).toBeVisible();
+});
+
+test('automatic songs preserve a handmade chorus and support the new musical controls', async ({ page }) => {
+  await openStudio(page);
+  await page.getByLabel('Sound preset', { exact: true }).selectOption('Metal');
+  await expect(page.getByLabel('Chord voicing')).toHaveValue('Power');
+  await expect(page.getByLabel('Strum pattern')).toHaveValue('Chug');
+  await expect(page.getByLabel('Melody character')).toHaveValue('Angular');
+  await page.getByLabel('Second melody / counterpoint').check();
+  await expect(page.getByLabel('Countermelody', { exact: true })).toBeVisible();
+  await page.getByLabel('Variation seed').fill('444');
+  await page.getByLabel(/Length.*bars/).fill('1');
+  await page.getByLabel('Section name').fill('Chorus');
+  await page.getByRole('button', { name: 'Save section', exact: true }).click();
+  await page.getByRole('button', { name: 'Song', exact: true }).click();
+  await page.getByRole('button', { name: 'Add to song', exact: true }).click();
+  await page.getByLabel('Length', { exact: true }).selectOption('Short');
+  await page.getByLabel('Style', { exact: true }).selectOption('Metal');
+  await page.getByLabel('Takes to compare').fill('1');
+  await page.getByRole('button', { name: 'Generate and append song' }).click();
+  await expect(page.getByRole('status')).toContainText('Your saved sections are preserved', { timeout: 60000 });
+  await expect(page.getByLabel('Saved section').getByRole('option', { name: 'Chorus', exact: true })).toHaveCount(1);
+  await expect(page.getByLabel('Saved section').getByRole('option', { name: 'Chorus 2', exact: true })).toHaveCount(1);
+  await expect(page.getByText('33 bars', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /^Chorus 1 bars/ }).click();
+  await expect(page.getByLabel('Variation seed')).toHaveValue('444');
+  await expect(page.getByLabel('Second melody / counterpoint')).toBeChecked();
+});
+
+test('SF2 imports are filtered by type, survive reload, and play offline', async ({ page }) => {
+  await openStudio(page);
+  await page.getByLabel('Imported instrument type').selectOption('Basses');
+  await page.locator('input[type=file][accept*=".sf2"]').setInputFiles('../assets/soundfonts/featured/studio-synths.sf2');
+  await expect(page.getByRole('status')).toContainText('Added 6 instruments', { timeout: 60000 });
+  await page.getByLabel('Melody type').selectOption('Basses');
+  const option = page.getByLabel('Melody', { exact: true }).locator('option').filter({ hasText: 'studio-synths / Reese Bass' });
+  const value = await option.getAttribute('value');
+  expect(value).toBeTruthy();
+  await page.getByLabel('Melody', { exact: true }).selectOption(value!);
+  for (const part of ['Chords', 'Bass', 'Drums']) await page.getByLabel(part, { exact: true }).selectOption('Mute');
+  await page.waitForTimeout(800);
+  // Simulate an older import whose bank is now used by a bundled instrument.
+  await page.evaluate(async () => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('music-studio-instruments', 1);
+      request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction('libraries', 'readwrite');
+      const store = transaction.objectStore('libraries');
+      const request = store.openCursor();
+      request.onsuccess = () => {
+        const cursor = request.result;
+        if (!cursor) return;
+        const value = cursor.value;
+        const view = new DataView(value.bytes);
+        for (const preset of value.metadata.presets) { preset.bank = 32; view.setUint16(preset.offset + 22, 32, true); }
+        cursor.update(value); cursor.continue();
+      };
+      transaction.oncomplete = () => { db.close(); resolve(); };
+      transaction.onerror = () => reject(transaction.error);
+    });
+  });
+  await page.reload();
+  await expect(page.getByLabel('Melody', { exact: true })).toHaveValue(value!, { timeout: 60000 });
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  const audio = await page.evaluate(() => typeof AudioContext !== 'undefined' && typeof AudioWorkletNode !== 'undefined');
+  if (audio) {
+    await page.getByRole('button', { name: 'Play current section' }).click();
+    await expect.poll(async () => Number(await page.getByRole('meter').getAttribute('aria-valuenow')), { timeout: 30000 }).toBeGreaterThan(.001);
+    await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  }
 });
