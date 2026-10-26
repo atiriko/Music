@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Royalty Free Music Maker</string>
+    <string name="title_activity_main">Royalty Free Music Maker</string>
+    <string name="package_name">com.loomworkz.music</string>
+    <string name="custom_url_scheme">com.loomworkz.music</string>
+</resources>

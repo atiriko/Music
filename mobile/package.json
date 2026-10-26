@@ -1,0 +1,43 @@
+{
+  "name": "algorithmic-music-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:engine": "python scripts/prepare_engine.py",
+    "dev": "vite --host 127.0.0.1",
+    "build": "npm run prepare:engine && tsc --noEmit && vite build",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "sync": "npm run build && cap sync && python scripts/finalize_native.py",
+    "android": "cap open android",
+    "ios": "cap open ios",
+    "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
+    "build:android": "python scripts/build_android.py"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/filesystem": "^8.1.5",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/preferences": "^8.0.1",
+    "@capacitor/share": "^8.0.3",
+    "@capacitor/status-bar": "^8.0.4",
+    "pyodide": "^314.0.7",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "spessasynth_core": "^4.3.22",
+    "spessasynth_lib": "^4.3.14"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.4.3",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

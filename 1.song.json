@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "bpm": 110,
+  "sequence": [
+    "A",
+    "B",
+    "A",
+    "A"
+  ],
+  "sections": {
+    "A": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Balanced",
+        "bpm": 110,
+        "bars": 8,
+        "seed": 965306955,
+        "drum_style": "Rock",
+        "drum_complexity": "Follow complexity",
+        "drum_fills": "Every 4 bars"
+      },
+      "instruments": {
+        "Melody": "Piano",
+        "Chords": "Strings",
+        "Bass": "Synth bass",
+        "Drums": "Standard kit"
+      }
+    },
+    "B": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Balanced",
+        "bpm": 110,
+        "bars": 8,
+        "seed": 292091341,
+        "drum_style": "Rock",
+        "drum_complexity": "Follow complexity",
+        "drum_fills": "Every 4 bars"
+      },
+      "instruments": {
+        "Melody": "Piano",
+        "Chords": "Strings",
+        "Bass": "Synth bass",
+        "Drums": "Standard kit"
+      }
+    }
+  }
+}

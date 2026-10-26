@@ -1,0 +1,23 @@
+{
+  "appId": "com.loomworkz.music",
+  "appName": "Royalty Free Music Maker",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "ios": {
+    "contentInset": "never",
+    "preferredContentMode": "mobile",
+    "backgroundColor": "#10131d"
+  },
+  "android": {
+    "backgroundColor": "#10131d",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#10131d"
+    }
+  }
+}

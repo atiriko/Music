@@ -1,0 +1,5 @@
+GeneralUser GS by S. Christian Collins
+https://www.schristiancollins.com/generaluser.php
+Source: https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/684543d5e5efaef08d02be50dcda8d552478fa60/GeneralUser-GS.sf2
+Commit: 684543d5e5efaef08d02be50dcda8d552478fa60
+SHA256: 9575028c7a1f589f5770fccc8cff2734566af40cd26ed836944e9a5152688cfe

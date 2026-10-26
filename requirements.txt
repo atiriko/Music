@@ -1,0 +1,5 @@
+﻿numpy>=1.26,<3
+sounddevice>=0.5,<1
+python-rtmidi>=1.5,<2
+tinysoundfont==0.3.7
+mido>=1.3,<2

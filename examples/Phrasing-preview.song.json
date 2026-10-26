@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "bpm": 108,
+  "sequence": [
+    "Preview"
+  ],
+  "sections": {
+    "Preview": {
+      "settings": {
+        "key": "A",
+        "scale": "Natural minor",
+        "complexity": "Balanced",
+        "bpm": 108,
+        "bars": 8,
+        "seed": 11,
+        "drum_style": "Funk",
+        "drum_complexity": "Follow complexity",
+        "drum_fills": "Every 4 bars",
+        "chord_style": "Syncopated",
+        "bass_style": "Groove",
+        "feel": "Natural",
+        "phrasing": "Balanced"
+      },
+      "instruments": {
+        "Melody": "Electric piano",
+        "Chords": "Clean Guitar",
+        "Bass": "Finger Bass",
+        "Drums": "Room kit"
+      }
+    }
+  }
+}

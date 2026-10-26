@@ -1,0 +1,40 @@
+[
+  {
+    "id": "sf2-d9f5157720963671906727ca2e12b3293fd822c831bb0de477dd1c5f3ad37108",
+    "name": "Studio Upright",
+    "filename": "UprightPianoKW-20220221.sf2",
+    "sha256": "d9f5157720963671906727ca2e12b3293fd822c831bb0de477dd1c5f3ad37108",
+    "presets": [
+      {
+        "label": "Studio Upright",
+        "name": "Upright Piano KW",
+        "category": "Pianos & keys",
+        "program": 0,
+        "bank": 32,
+        "gm_program": 0,
+        "drums": false,
+        "offset": 57368554
+      }
+    ],
+    "relative_file": "assets/soundfonts/featured/upright.sf2"
+  },
+  {
+    "id": "sf2-a58803acd8640a06a0a1a277a16ff4cd2610d9eab5fd6793741db4730c12f594",
+    "name": "Studio Clean Guitar",
+    "filename": "EGuitarFSBS-clean bridge small 20260807.sf2",
+    "sha256": "a58803acd8640a06a0a1a277a16ff4cd2610d9eab5fd6793741db4730c12f594",
+    "presets": [
+      {
+        "label": "Studio Clean Guitar",
+        "name": "EGuitar Cl. Br. Sm.",
+        "category": "Guitars",
+        "program": 0,
+        "bank": 33,
+        "gm_program": 24,
+        "drums": false,
+        "offset": 10853902
+      }
+    ],
+    "relative_file": "assets/soundfonts/featured/clean-guitar.sf2"
+  }
+]

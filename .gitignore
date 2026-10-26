@@ -1,1 +1,16 @@
 /__pycache__
+/tests/__pycache__
+/audio_settings.json
+
+/*-results.log
+
+/assets/user-instruments/
+
+# Keystores and signing keys
+/keys
+/keystore
+*.keystore
+*.jks
+*.key
+*.p12
+*.pem

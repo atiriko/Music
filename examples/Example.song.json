@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "bpm": 110,
+  "sequence": [
+    "Intro",
+    "Verse",
+    "[Drum fill]",
+    "Chorus",
+    "Verse",
+    "[Drum fill]",
+    "Chorus",
+    "Bridge",
+    "Chorus",
+    "Outro"
+  ],
+  "sections": {
+    "Intro": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Simple",
+        "bpm": 110,
+        "bars": 4,
+        "seed": 101
+      },
+      "instruments": {
+        "Melody": "Piano",
+        "Chords": "Strings",
+        "Bass": null,
+        "Drums": null
+      }
+    },
+    "Verse": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Balanced",
+        "bpm": 110,
+        "bars": 8,
+        "seed": 102
+      },
+      "instruments": {
+        "Melody": "Guitar",
+        "Chords": "Electric piano",
+        "Bass": "Synth bass",
+        "Drums": "Standard kit"
+      }
+    },
+    "Chorus": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Intricate",
+        "bpm": 110,
+        "bars": 8,
+        "seed": 103
+      },
+      "instruments": {
+        "Melody": "Piano",
+        "Chords": "Strings",
+        "Bass": "Synth bass",
+        "Drums": "Power kit"
+      }
+    },
+    "Bridge": {
+      "settings": {
+        "key": "C",
+        "scale": "Natural minor",
+        "complexity": "Balanced",
+        "bpm": 110,
+        "bars": 4,
+        "seed": 104
+      },
+      "instruments": {
+        "Melody": "Flute",
+        "Chords": "Harp",
+        "Bass": "Synth bass",
+        "Drums": "Brush kit"
+      }
+    },
+    "Outro": {
+      "settings": {
+        "key": "C",
+        "scale": "Major",
+        "complexity": "Simple",
+        "bpm": 110,
+        "bars": 4,
+        "seed": 105
+      },
+      "instruments": {
+        "Melody": "Piano",
+        "Chords": "Strings",
+        "Bass": null,
+        "Drums": null
+      }
+    }
+  }
+}
