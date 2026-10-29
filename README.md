@@ -121,4 +121,4 @@ The mobile version lives in `mobile/` and shares this Python composition engine.
 
 ## Docker web deployment
 
-Run `docker compose up --build -d` from the repository root to serve the web version at http://localhost:43729. For Coolify and https://music.loomwork.com, use the root `Dockerfile`, repository build context `/`, and internal port `43729`. Full configuration, DNS, HTTPS, and browser-storage details are in [deploy/README.md](deploy/README.md).
+Run `docker compose up --build -d` from the repository root to serve the web version at http://localhost:43729. For Coolify and https://music.loomworkz.com, use the root `Dockerfile`, repository build context `/`, and internal port `43729`. Full configuration, DNS, HTTPS, and browser-storage details are in [deploy/README.md](deploy/README.md).

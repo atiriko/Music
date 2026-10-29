@@ -25,6 +25,8 @@ RUN cd mobile && npm ci --no-audit --no-fund
 COPY . .
 WORKDIR /build/mobile
 RUN npm run build:web \
+    && test -s dist/privacy.html \
+    && test -s dist/privacy.css \
     && python /build/deploy/precompress.py /build/mobile/dist
 
 FROM nginx:stable-alpine AS runtime

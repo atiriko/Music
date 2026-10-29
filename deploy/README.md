@@ -1,4 +1,4 @@
-# Deploy Music Studio to music.loomwork.com
+# Deploy Music Studio to music.loomworkz.com
 
 The Docker image serves the existing web interface using nginx on port **43729**.
 Music generation, MIDI, playback, WAV rendering, and SF2 imports run in the
@@ -21,14 +21,14 @@ the checksum-verified NumPy WebAssembly package.
 4. Point the `music` DNS **A** record in `loomwork.com` to your Coolify server's
    public IPv4 address. Add an AAAA record only if that server also has working
    public IPv6. The proxy needs public HTTP/HTTPS access for routing and TLS.
-5. In **Domains**, add HTTPS for **music.loomwork.com**, targeting internal port
+5. In **Domains**, add HTTPS for **music.loomworkz.com**, targeting internal port
    **43729**, with no path prefix. Older Coolify versions use the combined value
-   `https://music.loomwork.com:43729`; the public URL remains
-   `https://music.loomwork.com`, without `:43729`.
+   `https://music.loomworkz.com:43729`; the public URL remains
+   `https://music.loomworkz.com`, without `:43729`.
 6. Deploy. The image provides its own Docker health check at `/healthz`.
    No environment variables, persistent volumes, or host-port mappings are
    required for this Dockerfile deployment. Coolify handles public HTTPS.
-7. Open `https://music.loomwork.com`, generate and play a section, then test MIDI
+7. Open `https://music.loomworkz.com`, generate and play a section, then test MIDI
    and WAV export. Audio starts after a user tap/click. HTTPS is required for
    browser audio worklets outside localhost.
 
@@ -67,7 +67,7 @@ docker compose down
 ## Privacy policy URL
 
 The build includes a standalone, public HTML privacy policy at
-**https://music.loomwork.com/privacy.html**. After deploying this change, use that
+**https://music.loomworkz.com/privacy.html**. After deploying this change, use that
 URL in the App Store Connect and Google Play Console privacy policy fields.
 The page loads without JavaScript, the music engine, or a login. The app also
 links to its bundled copy, so the policy remains available in mobile builds.
@@ -82,7 +82,7 @@ copy until updated.
 ## Storage and updates
 
 Saved projects and imported instruments live in the user's browser storage,
-scoped to `https://music.loomwork.com`. They are not sent to this server and do
+scoped to `https://music.loomworkz.com`. They are not sent to this server and do
 not automatically sync across devices, browser profiles, or domains. Clearing
 site data removes those local copies. Users can export song projects and WAV/MIDI
 files; original imported SF2 files are needed when moving projects to another
