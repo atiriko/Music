@@ -137,3 +137,8 @@ input[type=range]{accent-color:var(--accent);border:0;padding:0;min-height:28px;
 
 .song-controls{border:0;padding:0;margin:0;min-width:0}
 .song-controls:disabled{opacity:.75}
+
+.app-footer{padding:24px 0 6px;text-align:center}
+.app-footer a,.loading a{display:inline-block;padding:10px 4px;color:var(--muted);font-size:13px;text-underline-offset:4px}
+.app-footer a:hover,.loading a:hover{color:var(--accent)}
+.app-footer a:focus-visible,.loading a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}

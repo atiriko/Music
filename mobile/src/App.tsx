@@ -307,7 +307,7 @@ export default function App() {
     if (input.current) input.current.value = '';
   };
 
-  if (!catalog || !settings || !instruments || !ready) return <main className="loading"><h1>Royalty Free Music Maker</h1>{error ? <><p role="alert">{error}</p><button onClick={() => location.reload()}>Try again</button></> : <><p>Loading the engine and instruments</p><div className="loading-bar"><i /></div></>}</main>;
+  if (!catalog || !settings || !instruments || !ready) return <main className="loading"><h1>Royalty Free Music Maker</h1>{error ? <><p role="alert">{error}</p><button onClick={() => location.reload()}>Try again</button></> : <><p>Loading the engine and instruments</p><div className="loading-bar"><i /></div></>}<a href="./privacy.html">Privacy Policy</a></main>;
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setSettings({ ...settings, [key]: value });
   const active = playing === 'song' ? song : section;
   const activeBar = active ? Math.min(active.bars, Math.floor(position * active.bpm / 240) + 1) : 1;
@@ -404,6 +404,7 @@ export default function App() {
         </Group>
       </>}
       {mode !== 'projects' && <Group title="Export"><div className="actions"><button onClick={() => exportMusic('midi')} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)}>Export MIDI</button><button onClick={() => exportMusic('wav')} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)}>Export WAV</button></div></Group>}
+      <footer className="app-footer"><a href="./privacy.html">Privacy Policy</a></footer>
     </main>
     <aside className="transport" aria-label="Playback controls">
       <button className="transport-play" aria-label={mode === 'song' ? 'Play current song' : 'Play current section'} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)} onClick={() => play(mode === 'song' ? 'song' : 'generate')}>▶</button>

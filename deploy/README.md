@@ -64,6 +64,21 @@ docker compose exec music nginx -t
 docker compose down
 ```
 
+## Privacy policy URL
+
+The build includes a standalone, public HTML privacy policy at
+**https://music.loomwork.com/privacy.html**. After deploying this change, use that
+URL in the App Store Connect and Google Play Console privacy policy fields.
+The page loads without JavaScript, the music engine, or a login. The app also
+links to its bundled copy, so the policy remains available in mobile builds.
+
+Edit `mobile/public/privacy.html` when data practices or privacy contact details
+change. Keep the developer identity and contact details consistent with the
+store listings, and verify hosting/proxy log retention before submission.
+Redeploy the website to publish updates; rebuild/sync mobile apps to update
+their bundled policy. Existing installed mobile versions retain their bundled
+copy until updated.
+
 ## Storage and updates
 
 Saved projects and imported instruments live in the user's browser storage,
