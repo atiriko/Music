@@ -4,19 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "prepare:engine": "python scripts/prepare_engine.py",
+    "prepare:engine": "node scripts/python.mjs scripts/prepare_engine.py",
     "dev": "vite --host 127.0.0.1",
-    "build": "npm run prepare:engine && tsc --noEmit && vite build",
+    "build": "npm run configure:ads && npm run prepare:engine && tsc --noEmit && vite build",
     "test": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test",
-    "sync": "npm run build && cap sync && python scripts/finalize_native.py",
+    "sync": "npm run build && cap sync && node scripts/python.mjs scripts/finalize_native.py",
     "android": "cap open android",
     "ios": "cap open ios",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
-    "build:android": "python scripts/build_android.py",
-    "build:web": "npm run build -- --base=/"
+    "build:android": "node scripts/python.mjs scripts/build_android.py",
+    "build:web": "npm run build -- --base=/",
+    "configure:ads": "node scripts/python.mjs scripts/configure_ads.py"
   },
   "dependencies": {
+    "@capacitor-community/admob": "8.2.0",
     "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.2",
     "@capacitor/core": "^8.5.3",

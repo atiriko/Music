@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "testing": true,
+  "android": {
+    "appId": "ca-app-pub-2092620769473230~4936898729",
+    "bannerId": "ca-app-pub-2092620769473230/8814378648",
+    "testing": false
+  },
+  "ios": {
+    "appId": "ca-app-pub-3940256099942544~1458002511",
+    "bannerId": "ca-app-pub-3940256099942544/2934735716",
+    "testing": true
+  }
+}

@@ -10,6 +10,7 @@ import { deleteLibrary, saveLibrary, storedMetadata, remapLibrary } from './libr
 import { PianoRoll } from './PianoRoll';
 import { FILL, PARTS, COLORS } from './types';
 import type { Catalog, Composition, Instruments, Library, Part, Project, Settings } from './types';
+import { useBannerAds } from './useBannerAds';
 import './style.css';
 
 type Saved = { name: string; project: Project; updated: string };
@@ -72,6 +73,7 @@ export default function App() {
   const [loop, setLoop] = useState(true);
   const [volume, setVolume] = useState(.8);
   const [ready, setReady] = useState(false);
+  const ads = useBannerAds(ready);
   const [license, setLicense] = useState<{ title: string; text: string } | null>(null);
   const playingRef = useRef(playing);
   const operation = useRef(0);
@@ -318,6 +320,11 @@ export default function App() {
     {license && <div className="modal-backdrop"><section className="license-modal" role="dialog" aria-modal="true" aria-label={license.title} onKeyDown={event => { if (event.key === 'Escape') setLicense(null); }}><header><h2>{license.title}</h2><button autoFocus onClick={() => setLicense(null)}>Close</button></header><pre tabIndex={0}>{license.text}</pre></section></div>}
     <header className="topbar"><h1>Royalty Free Music Maker</h1><span className="readout">{settings.key.split(' ')[0]} {scaleShort} · {Number.isFinite(settings.bpm) ? settings.bpm : '—'} bpm</span></header>
     <main className="page">
+      {ads.diagnostic && <section className="ad-test-status" aria-label="Ad test status">
+        <strong>Ad test status</strong>
+        <p role="status">{ads.diagnostic.message}</p>
+        {['error', 'blocked'].includes(ads.diagnostic.phase) && <button disabled={ads.retrying} onClick={() => { void ads.retry(); }}>{ads.retrying ? 'Retrying…' : 'Retry banner'}</button>}
+      </section>}
       {error && <div className="message error" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={() => setError('')}>×</button></div>}
       {notice && <div className="message success" role="status"><span>{notice}</span><button aria-label="Dismiss message" onClick={() => setNotice('')}>×</button></div>}
       {mode === 'generate' && <>
@@ -404,7 +411,7 @@ export default function App() {
         </Group>
       </>}
       {mode !== 'projects' && <Group title="Export"><div className="actions"><button onClick={() => exportMusic('midi')} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)}>Export MIDI</button><button onClick={() => exportMusic('wav')} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)}>Export WAV</button></div></Group>}
-      <footer className="app-footer"><a href="./privacy.html">Privacy Policy</a></footer>
+      <footer className="app-footer"><a href="./privacy.html">Privacy Policy</a>{ads.privacyRequired && <button className="link" onClick={() => { stop(); void ads.openPrivacy().catch(showError); }}>Ad privacy choices</button>}</footer>
     </main>
     <aside className="transport" aria-label="Playback controls">
       <button className="transport-play" aria-label={mode === 'song' ? 'Play current song' : 'Play current section'} disabled={Boolean(busy) || (mode === 'song' && !project.sequence.length)} onClick={() => play(mode === 'song' ? 'song' : 'generate')}>▶</button>

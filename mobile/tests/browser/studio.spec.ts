@@ -202,3 +202,17 @@ test('SF2 imports are filtered by type, survive reload, and play offline', async
     await page.getByRole('button', { name: 'Stop', exact: true }).click();
   }
 });
+
+test('banner space keeps tabs and transport above the native ad and collapses on failure', async ({ page }) => {
+  await openStudio(page);
+  const original = await page.locator('.tabs').boundingBox();
+  await page.evaluate(() => document.documentElement.style.setProperty('--admob-inset', '66px'));
+  const tabs = await page.locator('.tabs').boundingBox();
+  const transport = await page.locator('.transport').boundingBox();
+  expect(Math.round(original!.y - tabs!.y)).toBe(66);
+  expect(transport!.y + transport!.height).toBeLessThanOrEqual(tabs!.y + 1);
+  await page.evaluate(() => document.documentElement.style.setProperty('--admob-inset', '0px'));
+  const restored = await page.locator('.tabs').boundingBox();
+  expect(restored!.y).toBe(original!.y);
+  await expect(page.getByRole('button', { name: 'Ad privacy choices' })).toHaveCount(0);
+});

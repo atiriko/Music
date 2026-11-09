@@ -12,6 +12,8 @@ The Python composition code remains in the desktop project and is bundled unchan
 - @capacitor/preferences 8.0.1: MIT
 - @capacitor/share 8.0.3: MIT
 - @capacitor/status-bar 8.0.4: MIT
+- @capacitor-community/admob 8.2.0: MIT; https://github.com/capacitor-community/admob
+- Google Mobile Ads and User Messaging Platform SDKs: Google SDK terms; https://developers.google.com/admob/terms
 - stb-vorbis 0.0.6: Apache-2.0
 
 - Pyodide 314.0.7: MPL-2.0, source: https://github.com/pyodide/pyodide

@@ -17,7 +17,7 @@ Physical Android/iPhone testing is still needed before a store release. A native
 - Full-song MIDI piano roll with track filters, zoom, horizontal scrolling, and playback cursor.
 - MIDI/WAV exports using the native Android/iOS share sheet; project import/export uses the desktop `.song.json` format.
 - Automatic draft persistence, multiple named projects saved locally, and an included example song.
-- No microphone, accounts, analytics, or external synthesizer are needed. Generation and playback assets are bundled offline.
+- No microphone, accounts, or external synthesizer are needed. Native apps include AdMob banner advertising; music remains local. Generation and playback assets are bundled offline.
 
 Playback and rendering pause/cancel when the app leaves the foreground. Background audio, lock-screen media controls, external MIDI hardware, cloud sync, and store publication are not implemented. The first startup initializes the local music engine; it may take a few seconds, especially on an older phone. Long WAV exports use additional memory.
 
@@ -117,3 +117,62 @@ Automatic generation appends related sections and preserves existing handmade se
 SoundFont (.sf2) imports are limited to 64 MB per file. Imported presets are inspected and remapped into private banks by the same Python code as desktop. Normalized bytes live in IndexedDB, are restored before project validation, and are used by both the audio worklet and WAV worker. Pickers group sounds by instrument family. Project JSON contains references rather than embedding sample files, so moving a project between devices requires importing the same instrument libraries.
 
 The original desktop engine functions remain available. Additional shared modules are `auto_song.py`, `quality.py`, `arrangement.py`, `articulation.py`, `counterpoint.py`, `soundbanks.py`, and `presets.py`. The build includes every shared module and the featured catalog; SF2 files and credits are bundled separately. Live playback loads the libraries a composition uses and unloads unused custom banks between compositions.
+
+
+## AdMob banners
+
+Android and iOS show an anchored adaptive banner below the navigation, with a
+16px gap separating ads from controls. Banner size changes update the reserved
+space; a failed/offline request leaves the app usable without a blank ad slot.
+The website does not initialize AdMob or request ads.
+
+`admob.config.json` is the single configuration file. Android is configured with your app/banner IDs, and iOS uses Google's demo IDs.
+Both platforms have `testing: true`. Native
+demo ads require a device/simulator build; browser preview does not display ads.
+`npm run build` validates this configuration and writes the native app IDs to
+AndroidManifest.xml and Info.plist. `npm run sync` includes the plugin in both
+native projects. The plugin supplies the Google SDKs; do not add duplicate SDKs.
+
+For your own ads:
+
+1. Register separate Android and iOS apps in AdMob and create one banner unit for
+   each. Set each platform's `appId` (`~` separator) and `bannerId` (`/` separator)
+   in `admob.config.json`. Keep the platform’s `testing: true` during device development.
+2. Configure and publish the applicable privacy messages in AdMob's Privacy &
+   messaging area. Consent is refreshed on launch, and the required form is shown
+   before SDK initialization/ad requests. Ads are requested only if UMP returns
+   `canRequestAds`. An “Ad privacy choices” action appears when UMP requires it;
+   updating choices removes the previous banner before a new request.
+3. Set `android.testing: false` for an Android production release only after
+   entering your real Android app and banner IDs. Leave `ios.testing: true` until
+   iOS is ready. Platform flags override the top-level fallback `testing` value;
+   the build rejects demo IDs for any platform configured in live mode. Requests currently use `npa: true`
+   (non-personalized ads); the app does not independently prompt for ATT.
+4. Run `npm run sync`, build the native apps, and test on physical devices.
+   Confirm consent, banner layout in both orientations, no-fill/offline behavior,
+   ad clicks, and uninterrupted music playback. Review the SDK data disclosures
+   in Google Play Data safety and App Store App Privacy before submission.
+
+Google's SKAdNetwork identifier is included. Add any further ad partner IDs from
+Google's current iOS integration guide if enabling those partners/mediation.
+Set `enabled: false` to stop banner requests without uninstalling the plugin.
+This disables requests, but the SDK is still part of the native binary.
+
+References: [plugin setup](https://github.com/capacitor-community/admob),
+[Google Android setup](https://developers.google.com/admob/android/quick-start),
+[Google iOS setup](https://developers.google.com/admob/ios/quick-start).
+
+
+### Troubleshooting a missing banner on a test phone
+
+Native builds with the platform's `testing: true` show an **Ad test status**
+panel above Composition. It reports consent, initialization, loading, loaded,
+or the exact SDK error. **Retry banner** checks consent again and removes the
+previous request before retrying. The diagnostic panel is absent on the website
+and in live-ad builds.
+
+If the panel reports an account/configuration error during consent, check the
+AdMob app ID and the privacy messages configured for that app in AdMob.
+If it reports `canRequestAds=false`, no banner request has been made. If it
+reports a banner error, keep its code and message for troubleshooting. This
+panel does not bypass consent or change production ad settings.
